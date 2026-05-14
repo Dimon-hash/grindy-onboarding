@@ -20,11 +20,18 @@ public record PlanSuggestion(String title, String summary, List<MilestoneSuggest
         List<MilestoneSuggestion> cleanMilestones = milestones == null || milestones.isEmpty()
                 ? fallback().milestones()
                 : milestones.stream().limit(5).map(MilestoneSuggestion::normalized).toList();
-        return new PlanSuggestion(clean(title, "Твой план к цели"), clean(summary, "План собран под твою цель и текущие условия."), cleanMilestones);
+        return new PlanSuggestion(
+                clean(title, "Твой план к цели", 44),
+                clean(summary, "План собран под твою цель и текущие условия.", 120),
+                cleanMilestones
+        );
     }
 
-    private static String clean(String value, String fallback) {
+    private static String clean(String value, String fallback, int limit) {
         String clean = value == null ? "" : value.trim();
-        return clean.isBlank() ? fallback : clean;
+        if (clean.isBlank()) {
+            return fallback;
+        }
+        return clean.length() <= limit ? clean : clean.substring(0, limit);
     }
 }

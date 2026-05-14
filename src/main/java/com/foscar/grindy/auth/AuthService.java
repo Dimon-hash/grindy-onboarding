@@ -29,10 +29,9 @@ public final class AuthService {
     public UserContext fromHeader(HttpExchange exchange) {
         String header = exchange.getRequestHeaders().getFirst("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
-            String storageId = storageIdFromToken(header.substring("Bearer ".length()).trim());
-            if (!storageId.isBlank()) {
-                String telegramId = storageId.startsWith("tg_") ? storageId.substring(3) : "";
-                return new UserContext(storageId, telegramId, "", "Grindy", "");
+            UserContext user = userFromToken(header.substring("Bearer ".length()).trim());
+            if (!user.storageId().isBlank()) {
+                return user;
             }
         }
         if (config.allowLocalAuth()) {
@@ -55,7 +54,13 @@ public final class AuthService {
     }
 
     public String issueToken(UserContext user) {
-        String payload = base64Url(user.storageId());
+        String payload = base64Url(String.join("\n",
+                safeTokenPart(user.storageId()),
+                safeTokenPart(user.telegramId()),
+                safeTokenPart(user.username()),
+                safeTokenPart(user.firstName()),
+                safeTokenPart(user.lastName())
+        ));
         return payload + TOKEN_SEPARATOR + sign(payload);
     }
 
@@ -116,17 +121,25 @@ public final class AuthService {
         return sanitized.isBlank() ? UserContext.LOCAL_USER_ID : sanitized;
     }
 
-    private String storageIdFromToken(String token) {
+    private UserContext userFromToken(String token) {
         int separator = token.indexOf(TOKEN_SEPARATOR);
         if (separator < 0) {
-            return config.allowLocalAuth() ? sanitizeStorageId(token) : "";
+            String storageId = config.allowLocalAuth() ? sanitizeStorageId(token) : "";
+            return new UserContext(storageId, "", storageId, "Grindy", "");
         }
         String payload = token.substring(0, separator);
         String signature = token.substring(separator + 1);
         if (!MessageDigest.isEqual(sign(payload).getBytes(StandardCharsets.UTF_8), signature.getBytes(StandardCharsets.UTF_8))) {
-            return "";
+            return new UserContext("", "", "", "", "");
         }
-        return sanitizeStorageId(new String(Base64.getUrlDecoder().decode(payload), StandardCharsets.UTF_8));
+        String decoded = new String(Base64.getUrlDecoder().decode(payload), StandardCharsets.UTF_8);
+        String[] parts = decoded.split("\\n", -1);
+        String storageId = sanitizeStorageId(parts.length > 0 ? parts[0] : "");
+        if (parts.length >= 5) {
+            return new UserContext(storageId, parts[1], parts[2], parts[3].isBlank() ? "Grindy" : parts[3], parts[4]);
+        }
+        String telegramId = storageId.startsWith("tg_") ? storageId.substring(3) : "";
+        return new UserContext(storageId, telegramId, storageId, "Grindy", "");
     }
 
     private String sign(String payload) {
@@ -142,6 +155,10 @@ public final class AuthService {
 
     private String base64Url(byte[] value) {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(value);
+    }
+
+    private String safeTokenPart(String value) {
+        return value == null ? "" : value.replace('\n', ' ').replace('\r', ' ').trim();
     }
 
     private byte[] hmacSha256(byte[] key, String value) {

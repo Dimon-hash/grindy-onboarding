@@ -1,7 +1,7 @@
 import {CUSTOM_VALUE} from "./js/config.js";
 import {steps} from "./js/steps.js";
 import {nodes, state} from "./js/state.js";
-import {authenticate, loadCurrentUser, loadOnboardingSuggestions, saveOnboarding} from "./js/api.js";
+import {ApiError, authenticate, loadCurrentUser, loadOnboardingSuggestions, saveOnboarding} from "./js/api.js";
 import {initTelegram, syncTheme, telegram} from "./js/telegram.js";
 import {renderStep} from "./js/screens.js";
 import {canContinue, choiceOptionValue, isCustomStepValue} from "./js/validators.js";
@@ -16,13 +16,7 @@ boot();
 
 async function boot() {
     try {
-        if (telegram && telegram.initData) {
-            await authenticate({initData: telegram.initData});
-        } else if (state.token) {
-            await loadCurrentUser();
-        } else {
-            await authenticate({username: "local_user"});
-        }
+        await authenticateSession();
         loadFromUser();
         state.isReady = true;
         refreshSuggestions({renderAfter: false});
@@ -32,9 +26,38 @@ async function boot() {
     } catch (error) {
         console.error(error);
         state.isSplash = false;
+        state.bootError = userFacingBootError(error);
         nodes.app.hidden = false;
-        nodes.onboardingWizard.innerHTML = `<section class="fatal">Не удалось открыть онбординг</section>`;
+        nodes.onboardingWizard.innerHTML = `<section class="fatal">${state.bootError}</section>`;
     }
+}
+
+async function authenticateSession() {
+    if (telegram && telegram.initData) {
+        await authenticate({initData: telegram.initData});
+        return;
+    }
+    if (!state.token) {
+        await authenticate({username: "local_user"});
+        return;
+    }
+    try {
+        await loadCurrentUser();
+    } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+            clearStoredSession();
+            await authenticate({username: "local_user"});
+            return;
+        }
+        throw error;
+    }
+}
+
+function userFacingBootError(error) {
+    if (error instanceof ApiError && error.status === 401) {
+        return "Открой приложение внутри Telegram, чтобы продолжить.";
+    }
+    return "Не удалось открыть онбординг. Проверь подключение и попробуй ещё раз.";
 }
 
 function loadFromUser() {
@@ -351,6 +374,12 @@ async function nextStep() {
     }
     try {
         await saveOnboarding();
+    } catch (error) {
+        handleBackgroundSaveError(error);
+        if (error instanceof ApiError && error.status === 401) {
+            nodes.onboardingWizard.innerHTML = `<section class="fatal">${userFacingBootError(error)}</section>`;
+            return;
+        }
     } finally {
         state.savingStepId = "";
     }
@@ -411,7 +440,9 @@ function goTo(index) {
 
 function autosave() {
     window.clearTimeout(autosave.timer);
-    autosave.timer = window.setTimeout(saveOnboarding, 500);
+    autosave.timer = window.setTimeout(() => {
+        saveOnboarding().catch(handleBackgroundSaveError);
+    }, 500);
 }
 
 function queueSuggestionsRefresh() {
@@ -425,22 +456,36 @@ async function refreshSuggestions({renderAfter = true} = {}) {
     if ((state.onboarding.goal || "").trim().length < 80) {
         return;
     }
-    if (state.suggestionsRequest) {
-        await state.suggestionsRequest;
-        if (renderAfter) {
-            render();
-        }
+    const requestKey = suggestionsKey();
+    if (state.suggestionsKey === requestKey && state.suggestions.goals.length) {
         return;
+    }
+    if (state.suggestionsRequest) {
+        try {
+            await state.suggestionsRequest;
+        } catch (error) {
+            console.warn("AI suggestions unavailable", error);
+        }
+        if (state.suggestionsKey === requestKey && state.suggestions.goals.length) {
+            if (renderAfter) {
+                render();
+            }
+            return;
+        }
     }
     state.suggestionsLoading = true;
     state.suggestionsRequest = (async () => {
         const suggestions = await loadOnboardingSuggestions();
+        if (requestKey !== suggestionsKey()) {
+            return;
+        }
         state.suggestions = {
             experience: Array.isArray(suggestions.experience) ? suggestions.experience : [],
             conditions: Array.isArray(suggestions.conditions) ? suggestions.conditions : [],
             goals: Array.isArray(suggestions.goals) ? suggestions.goals : [],
             plan: suggestions.plan || null
         };
+        state.suggestionsKey = requestKey;
         applySuggestionDefaults();
     })();
     try {
@@ -471,6 +516,26 @@ function applySuggestionDefaults() {
 
 function shouldReplaceGeneratedChoice(value) {
     return !value || /^Вариант\s+\d-\d$/.test(value);
+}
+
+function suggestionsKey() {
+    return [
+        state.onboarding.goal || "",
+        state.onboarding.experience || "",
+        state.onboarding.conditions || ""
+    ].map((value) => value.trim()).join("|");
+}
+
+function handleBackgroundSaveError(error) {
+    if (error instanceof ApiError && error.status === 401) {
+        clearStoredSession();
+    }
+    console.warn("Unable to save onboarding", error);
+}
+
+function clearStoredSession() {
+    state.token = "";
+    localStorage.removeItem("grindy.token");
 }
 
 function blurActiveControl() {

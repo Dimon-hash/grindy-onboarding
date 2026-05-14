@@ -2,11 +2,17 @@ package com.foscar.grindy.onboarding;
 
 public record ChoiceSuggestion(String title, String description) {
     public ChoiceSuggestion normalized() {
-        return new ChoiceSuggestion(clean(title, "Свой сценарий"), clean(description, "Подходит под твою цель и текущий ритм."));
+        return new ChoiceSuggestion(
+                clean(title, "Свой сценарий", 32),
+                clean(description, "Подходит под твою цель и текущий ритм.", 96)
+        );
     }
 
-    private static String clean(String value, String fallback) {
+    private static String clean(String value, String fallback, int limit) {
         String clean = value == null ? "" : value.trim();
-        return clean.isBlank() ? fallback : clean;
+        if (clean.isBlank()) {
+            return fallback;
+        }
+        return clean.length() <= limit ? clean : clean.substring(0, limit);
     }
 }

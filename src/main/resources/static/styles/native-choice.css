@@ -156,19 +156,27 @@
 }
 
 .native-choice-text strong {
+    display: -webkit-box;
+    overflow: hidden;
     color: #000;
     font-size: 17px;
     line-height: 120%;
     font-weight: 700;
     letter-spacing: 0;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
 }
 
 .native-choice-text span {
+    display: -webkit-box;
+    overflow: hidden;
     color: rgba(0, 0, 0, 0.45);
     font-size: 15px;
     line-height: 130%;
     font-weight: 600;
     letter-spacing: 0;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .native-radio {

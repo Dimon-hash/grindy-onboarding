@@ -1,5 +1,14 @@
 import {state} from "./state.js";
 
+export class ApiError extends Error {
+    constructor(status, body) {
+        super(body || `Request failed with status ${status}`);
+        this.name = "ApiError";
+        this.status = status;
+        this.body = body;
+    }
+}
+
 export async function authenticate(payload) {
     const auth = await api("/api/auth/telegram", {method: "POST", body: payload, auth: false});
     state.token = auth.token;
@@ -39,7 +48,7 @@ export async function api(path, options = {}) {
         body: options.body === undefined ? undefined : JSON.stringify(options.body)
     });
     if (!response.ok) {
-        throw new Error(await response.text());
+        throw new ApiError(response.status, await response.text());
     }
     const text = await response.text();
     return text ? JSON.parse(text) : null;

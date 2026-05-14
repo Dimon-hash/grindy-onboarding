@@ -17,6 +17,8 @@ export const state = {
     planChanged: false,
     suggestionsLoading: false,
     suggestionsRequest: null,
+    suggestionsKey: "",
+    bootError: "",
     suggestions: {
         experience: [],
         conditions: [],

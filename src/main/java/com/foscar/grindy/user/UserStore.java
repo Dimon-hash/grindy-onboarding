@@ -7,8 +7,10 @@ import com.foscar.grindy.onboarding.OnboardingData;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public final class UserStore {
     private final Path usersDir;
@@ -24,7 +26,11 @@ public final class UserStore {
         if (Files.exists(userFile)) {
             String saved = Files.readString(userFile, StandardCharsets.UTF_8).trim();
             if (saved.startsWith("{") && saved.endsWith("}")) {
-                return json.read(saved, OnboardingData.class).normalized();
+                try {
+                    return json.read(saved, OnboardingData.class).normalized();
+                } catch (IOException ignored) {
+                    return OnboardingData.empty();
+                }
             }
         }
         return OnboardingData.empty();
@@ -32,7 +38,7 @@ public final class UserStore {
 
     public void saveOnboarding(String storageId, OnboardingData onboarding) throws IOException {
         Files.createDirectories(usersDir);
-        Files.writeString(onboardingPath(storageId), json.write(onboarding.normalized()), StandardCharsets.UTF_8);
+        writeAtomically(onboardingPath(storageId), json.write(onboarding.normalized()));
     }
 
     public CachedSuggestions readSuggestions(String storageId) throws IOException {
@@ -44,12 +50,16 @@ public final class UserStore {
         if (!saved.startsWith("{") || !saved.endsWith("}")) {
             return null;
         }
-        return json.read(saved, CachedSuggestions.class);
+        try {
+            return json.read(saved, CachedSuggestions.class);
+        } catch (IOException ignored) {
+            return null;
+        }
     }
 
     public void saveSuggestions(String storageId, CachedSuggestions suggestions) throws IOException {
         Files.createDirectories(usersDir);
-        Files.writeString(suggestionsPath(storageId), json.write(suggestions), StandardCharsets.UTF_8);
+        writeAtomically(suggestionsPath(storageId), json.write(suggestions));
     }
 
     private Path onboardingPath(String storageId) {
@@ -58,5 +68,15 @@ public final class UserStore {
 
     private Path suggestionsPath(String storageId) {
         return usersDir.resolve(AuthService.sanitizeStorageId(storageId) + ".suggestions.json");
+    }
+
+    private void writeAtomically(Path target, String body) throws IOException {
+        Path temp = target.resolveSibling(target.getFileName() + ".tmp");
+        Files.writeString(temp, body, StandardCharsets.UTF_8);
+        try {
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException ignored) {
+            Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 }

@@ -6,10 +6,17 @@ public record OnboardingData(String goal, String experience, String conditions, 
     }
 
     public OnboardingData normalized() {
-        return new OnboardingData(clean(goal), clean(experience), clean(conditions), clean(selectedGoal), clean(selectedPlan));
+        return new OnboardingData(
+                clean(goal, 500),
+                clean(experience, 320),
+                clean(conditions, 320),
+                clean(selectedGoal, 180),
+                clean(selectedPlan, 500)
+        );
     }
 
-    private static String clean(String value) {
-        return value == null ? "" : value.trim();
+    private static String clean(String value, int limit) {
+        String clean = value == null ? "" : value.trim();
+        return clean.length() <= limit ? clean : clean.substring(0, limit);
     }
 }

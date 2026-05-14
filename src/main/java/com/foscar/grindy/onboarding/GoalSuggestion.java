@@ -5,18 +5,29 @@ import java.util.List;
 public record GoalSuggestion(String duration, String title, String description, List<String> bullets, String accent) {
     public GoalSuggestion normalized() {
         return new GoalSuggestion(
-                clean(duration, "3 месяца"),
-                clean(title, "Дойти до цели"),
-                clean(description, "Понятная цель с реалистичным темпом и регулярными действиями."),
+                clean(duration, "3 месяца", 18),
+                clean(title, "Дойти до цели", 34),
+                clean(description, "Понятная цель с реалистичным темпом и регулярными действиями.", 112),
                 bullets == null || bullets.isEmpty()
                         ? List.of("Без резких перегрузок", "С понятными шагами", "С еженедельной проверкой")
-                        : bullets.stream().limit(4).map(String::trim).filter(item -> !item.isBlank()).toList(),
-                clean(accent, "blue")
+                        : bullets.stream().limit(4).map((item) -> clean(item, "", 38)).filter(item -> !item.isBlank()).toList(),
+                cleanAccent(accent)
         );
     }
 
-    private static String clean(String value, String fallback) {
+    private static String clean(String value, String fallback, int limit) {
         String clean = value == null ? "" : value.trim();
-        return clean.isBlank() ? fallback : clean;
+        if (clean.isBlank()) {
+            return fallback;
+        }
+        return clean.length() <= limit ? clean : clean.substring(0, limit);
+    }
+
+    private static String cleanAccent(String value) {
+        String clean = value == null ? "" : value.trim();
+        return switch (clean) {
+            case "orange", "green" -> clean;
+            default -> "blue";
+        };
     }
 }

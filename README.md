@@ -1,6 +1,26 @@
 # Grindy Onboarding
 
-Минимальный Java-проект для Telegram Mini App онбординга.
+Production-ready Java + static frontend для Telegram Mini App онбординга Grindy.
+
+Приложение собирает цель пользователя, генерирует персональные AI-варианты опыта, условий, целей и плана, сохраняет прогресс и проверяет Telegram Mini App авторизацию в production.
+
+## Структура
+
+```text
+src/main/java/com/foscar/grindy
+  ai/          AI suggestions через AITunnel/OpenAI-compatible API
+  auth/        Telegram initData validation и signed app tokens
+  config/      env-конфигурация
+  http/        API router, static files, security headers, rate limit
+  json/        Jackson wrapper
+  onboarding/  DTO и нормализация onboarding/AI данных
+  user/        file-based storage
+
+src/main/resources/static
+  app.js       frontend entrypoint
+  js/          state/api/screens/validators/telegram modules
+  styles/      CSS modules
+```
 
 ## Локально
 
@@ -28,6 +48,16 @@ export GRINDY_AI_BASE_URL="https://api.aitunnel.ru/v1"
 ```
 
 Если ключ не задан или провайдер временно недоступен, backend отдаёт локальный fallback.
+
+## Auth
+
+В development можно использовать local auth:
+
+```bash
+GRINDY_ALLOW_LOCAL_AUTH=true
+```
+
+В production local auth должен быть выключен, а `GRINDY_TELEGRAM_BOT_TOKEN` обязателен. Backend проверяет подпись Telegram `initData`, после чего выдаёт signed app token для API.
 
 ## Production
 

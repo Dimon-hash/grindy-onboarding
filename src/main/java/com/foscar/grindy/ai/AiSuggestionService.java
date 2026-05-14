@@ -50,7 +50,7 @@ public final class AiSuggestionService {
         String fingerprint = fingerprint(user.storageId(), clean);
         CachedSuggestions cached = userStore.readSuggestions(user.storageId());
         if (cached != null && fingerprint.equals(cached.fingerprint()) && cached.suggestions() != null) {
-            return cached.suggestions().normalized(cached.suggestions().source());
+            return completeWithFallback(cached.suggestions(), fallback(user, clean), cached.suggestions().source());
         }
 
         SuggestionsResponse suggestions = generate(user, clean).normalized(null);
@@ -66,6 +66,7 @@ public final class AiSuggestionService {
             SuggestionsResponse ai = callModel(user, onboarding);
             return completeWithFallback(ai, fallback(user, onboarding), "ai");
         } catch (Exception error) {
+            System.err.println("AI suggestions fallback: " + error.getMessage());
             return fallback(user, onboarding);
         }
     }

@@ -48,6 +48,7 @@
     border-radius: 16px;
     background: #f6f6f7;
     color: #000;
+    overflow: hidden;
     pointer-events: none;
 }
 
@@ -75,21 +76,29 @@
 }
 
 .choose-goal-ai-card h2 {
+    display: -webkit-box;
+    overflow: hidden;
     margin: 16px 0 10px;
     color: #000;
     font-size: 20px;
     line-height: 120%;
     font-weight: 800;
     letter-spacing: 0;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .choose-goal-ai-card p {
+    display: -webkit-box;
+    overflow: hidden;
     margin: 0;
     color: rgba(0, 0, 0, 0.45);
     font-size: 15px;
     line-height: 128%;
     font-weight: 600;
     letter-spacing: 0;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
 }
 
 .choose-goal-ai-card ul {
@@ -104,12 +113,15 @@
 
 .choose-goal-ai-card li {
     position: relative;
+    overflow: hidden;
     padding-left: 15px;
     color: #000;
     font-size: 14px;
     line-height: 125%;
     font-weight: 700;
     letter-spacing: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .choose-goal-ai-card li::before {
@@ -253,6 +265,7 @@
     padding: 0 0 24px;
     background: #fff;
     color: #000;
+    pointer-events: none;
 }
 
 .your-plan-live-content > p {
@@ -330,21 +343,29 @@
 }
 
 .your-plan-live-point h2 {
+    display: -webkit-box;
+    overflow: hidden;
     margin: 0 0 8px;
     color: #000;
     font-size: 15px;
     line-height: 120%;
     font-weight: 800;
     letter-spacing: 0;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .your-plan-live-point p {
+    display: -webkit-box;
+    overflow: hidden;
     margin: 0;
     color: rgba(0, 0, 0, 0.45);
     font-size: 13px;
     line-height: 130%;
     font-weight: 600;
     letter-spacing: 0;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
 }
 
 .your-plan-back-hit-area {
