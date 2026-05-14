@@ -18,6 +18,7 @@ async function boot() {
     try {
         await authenticateSession();
         loadFromUser();
+        repairOnboardingStep();
         state.isReady = true;
         refreshSuggestions({renderAfter: false});
         if (state.pendingSplashTap) {
@@ -73,6 +74,35 @@ function loadFromUser() {
             state.customDrafts[key] = value;
         }
     });
+}
+
+function repairOnboardingStep() {
+    const maxStep = firstIncompleteStep();
+    if (state.onboardingStep > maxStep) {
+        state.onboardingStep = maxStep;
+        localStorage.setItem("grindy.step", String(maxStep));
+    }
+}
+
+function firstIncompleteStep() {
+    if ((state.onboarding.goal || "").trim().length < steps[2].minLength) {
+        return 2;
+    }
+    if (!isCompletedChoice("experience")) {
+        return 3;
+    }
+    if (!isCompletedChoice("conditions")) {
+        return 4;
+    }
+    if (!(state.onboarding.selectedGoal || "").trim()) {
+        return 5;
+    }
+    return 6;
+}
+
+function isCompletedChoice(id) {
+    const value = (state.onboarding[id] || "").trim();
+    return Boolean(value) && value !== CUSTOM_VALUE;
 }
 
 function finishSplash() {
@@ -143,6 +173,7 @@ function bindStep(step) {
 function bindNavigation() {
     const next = document.getElementById("next");
     if (next) {
+        next.disabled = next.disabled || state.isAdvancing;
         next.addEventListener("click", nextStep);
     }
 
@@ -356,13 +387,18 @@ function bindCustomOpen(step) {
 }
 
 async function nextStep() {
-    const step = steps[state.onboardingStep];
+    if (state.isAdvancing) {
+        return;
+    }
+    const currentStepIndex = state.onboardingStep;
+    const step = steps[currentStepIndex];
     if (!canContinue(step)) {
         return;
     }
+    state.isAdvancing = true;
     blurActiveControl();
     if (["goal", "experience", "conditions"].includes(step.id)) {
-        await refreshSuggestions({renderAfter: false});
+        queueImmediateSuggestionsRefresh();
     }
     const showSaving = step.id === "experience" && state.customDrawerStepId !== step.id;
     if (showSaving) {
@@ -370,10 +406,14 @@ async function nextStep() {
         render();
         await wait(120);
     } else {
+        const next = document.getElementById("next");
+        if (next) {
+            next.disabled = true;
+        }
         await wait(80);
     }
     try {
-        await saveOnboarding();
+        await saveOnboardingWithTimeout();
     } catch (error) {
         handleBackgroundSaveError(error);
         if (error instanceof ApiError && error.status === 401) {
@@ -382,9 +422,13 @@ async function nextStep() {
         }
     } finally {
         state.savingStepId = "";
+        state.isAdvancing = false;
     }
-    if (state.onboardingStep < steps.length - 1) {
-        goTo(state.onboardingStep + 1);
+    if (state.onboardingStep !== currentStepIndex) {
+        return;
+    }
+    if (currentStepIndex < steps.length - 1) {
+        goTo(currentStepIndex + 1);
         return;
     }
     localStorage.setItem("grindy.onboardingComplete", "true");
@@ -450,6 +494,22 @@ function queueSuggestionsRefresh() {
     queueSuggestionsRefresh.timer = window.setTimeout(() => {
         refreshSuggestions({renderAfter: false});
     }, 800);
+}
+
+function queueImmediateSuggestionsRefresh() {
+    window.clearTimeout(queueSuggestionsRefresh.timer);
+    refreshSuggestions({renderAfter: true}).catch((error) => {
+        console.warn("AI suggestions unavailable", error);
+    });
+}
+
+function saveOnboardingWithTimeout() {
+    return Promise.race([
+        saveOnboarding(),
+        wait(3500).then(() => {
+            throw new Error("Onboarding save timeout");
+        })
+    ]);
 }
 
 async function refreshSuggestions({renderAfter = true} = {}) {

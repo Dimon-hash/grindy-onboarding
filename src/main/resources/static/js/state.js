@@ -8,6 +8,7 @@ export const state = {
     user: null,
     isSplash: true,
     isReady: false,
+    isAdvancing: false,
     savingStepId: "",
     pendingSplashTap: false,
     customDrawerStepId: "",
