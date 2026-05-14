@@ -1,0 +1,39 @@
+import {state} from "./state.js";
+
+export async function authenticate(payload) {
+    const auth = await api("/api/auth/telegram", {method: "POST", body: payload, auth: false});
+    state.token = auth.token;
+    state.user = auth.user;
+    localStorage.setItem("grindy.token", state.token);
+}
+
+export async function saveOnboarding() {
+    state.user = await api("/api/me/onboarding", {
+        method: "PATCH",
+        body: state.onboarding
+    });
+}
+
+export async function loadCurrentUser() {
+    state.user = await api("/api/me");
+}
+
+export async function api(path, options = {}) {
+    const headers = options.headers ? {...options.headers} : {};
+    if (options.auth !== false && state.token) {
+        headers.Authorization = `Bearer ${state.token}`;
+    }
+    if (options.body !== undefined) {
+        headers["Content-Type"] = "application/json";
+    }
+    const response = await fetch(path, {
+        method: options.method || "GET",
+        headers,
+        body: options.body === undefined ? undefined : JSON.stringify(options.body)
+    });
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
+}

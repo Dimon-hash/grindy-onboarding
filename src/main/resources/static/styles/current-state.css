@@ -1,0 +1,100 @@
+.current-state-back-hit-area {
+    position: absolute;
+    left: 6.1538%;
+    top: 11.6114%;
+    z-index: 8;
+    width: 12.3077%;
+    height: 5.6872%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.phone-screen.is-current-state .screen-art {
+    object-fit: contain;
+}
+
+.current-state-hit-layer {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 6;
+    width: min(100vw, calc(var(--app-height) * 390 / 844));
+    height: min(var(--app-height), calc(100vw * 844 / 390));
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.current-state-hit-layer button {
+    pointer-events: auto;
+}
+
+.current-state-choice-layer {
+    position: absolute;
+    left: 6.1538%;
+    top: 29.5024%;
+    z-index: 7;
+    width: 87.6923%;
+    height: 46.9194%;
+}
+
+.current-state-choice-hit {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 23.4848%;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+    font-size: 0;
+}
+
+.current-state-choice-1 {
+    top: 0;
+}
+
+.current-state-choice-2 {
+    top: 25.5051%;
+}
+
+.current-state-choice-3 {
+    top: 51.0101%;
+}
+
+.current-state-choice-4 {
+    top: 76.5152%;
+}
+
+.current-state-next-hit-area {
+    position: absolute;
+    left: 6.1538%;
+    top: 89.218%;
+    z-index: 13;
+    width: 87.6923%;
+    height: 5.9242%;
+    padding: 15px 40px;
+    border-radius: 12px;
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+}
+
+.current-state-next-hit-area:disabled {
+    cursor: default;
+}
+
+.phone-screen.has-experience-drawer .experience-next-hit-area {
+    left: 8.7179%;
+    top: 52.9621%;
+    bottom: auto;
+    width: 82.5641%;
+}
+
+.phone-screen.is-experience.is-saving .experience-next-hit-area {
+    background: transparent;
+    color: transparent;
+}

@@ -1,0 +1,101 @@
+.choose-goal-art {
+    position: absolute;
+    inset: 0;
+}
+
+.choose-goal-back-hit-area {
+    position: absolute;
+    left: 54px;
+    top: 121px;
+    z-index: 8;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.choose-goal-selector {
+    position: absolute;
+    left: 169px;
+    top: 638px;
+    z-index: 8;
+    display: grid;
+    grid-template-columns: repeat(3, 18px);
+    gap: 0;
+    height: 18px;
+}
+
+.choose-goal-dot {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.choose-goal-next-hit-area {
+    position: absolute;
+    left: 24px;
+    top: 753px;
+    z-index: 8;
+    width: 342px;
+    height: 50px;
+    padding: 15px 40px;
+    border-radius: 12px;
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+}
+
+.choose-goal-next-hit-area:disabled {
+    cursor: default;
+}
+
+.your-plan-art {
+    position: absolute;
+    inset: 0;
+}
+
+.your-plan-back-hit-area {
+    position: absolute;
+    left: 54px;
+    top: 121px;
+    z-index: 8;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.your-plan-change-hit-area {
+    position: absolute;
+    left: 113px;
+    top: 718px;
+    z-index: 8;
+    width: 164px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.your-plan-next-hit-area {
+    position: absolute;
+    left: 24px;
+    top: 753px;
+    z-index: 8;
+    width: 342px;
+    height: 50px;
+    padding: 15px 40px;
+    border-radius: 12px;
+    background: transparent;
+    color: transparent;
+    cursor: pointer;
+}

@@ -1,0 +1,99 @@
+.goal-back-hit-area {
+    position: absolute;
+    left: 5.1282%;
+    top: 11.8483%;
+    z-index: 6;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.goal-input-layer {
+    position: absolute;
+    left: 5.1282%;
+    top: 29.9763%;
+    z-index: 5;
+    width: 89.7436%;
+    height: 56.3981%;
+}
+
+.goal-input-layer textarea {
+    display: block;
+    width: 100%;
+    height: calc(100% - 46px);
+    padding: 0;
+    border: 0;
+    outline: 0;
+    resize: none;
+    border-radius: 0;
+    background: #fff;
+    color: var(--body);
+    caret-color: var(--blue);
+    font-size: 18px;
+    line-height: 140%;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+}
+
+.goal-input-layer textarea::placeholder {
+    color: rgba(8, 5, 35, 0.3);
+    opacity: 1;
+}
+
+.goal-input-layer:not(.has-value):not(.is-focused) textarea {
+    background: transparent;
+    color: transparent;
+    caret-color: transparent;
+}
+
+.goal-input-layer:not(.has-value):not(.is-focused) textarea::placeholder {
+    color: transparent;
+}
+
+.goal-counter {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 86px;
+    height: 20px;
+    transform: translateX(-50%);
+    background: #fff;
+    color: rgba(8, 5, 35, 0.3);
+    font-size: 14px;
+    line-height: 140%;
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: -0.02em;
+}
+
+.goal-input-layer:not(.has-value):not(.is-focused) .goal-counter {
+    opacity: 0;
+}
+
+.goal-next-button {
+    position: absolute;
+    left: 6.1538%;
+    bottom: max(41px, calc(env(safe-area-inset-bottom) + 24px + var(--keyboard-inset)));
+    z-index: 7;
+    width: 87.6923%;
+    height: 50px;
+    padding: 15px 40px;
+    border-radius: 12px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 16px;
+    line-height: 130%;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: -0.02em;
+    cursor: pointer;
+    transition: bottom 180ms ease;
+}
+
+.goal-next-button:disabled {
+    color: rgba(255, 255, 255, 0.4);
+    cursor: default;
+}
