@@ -23,12 +23,28 @@ export function canContinue(step) {
 }
 
 export function choiceOptionValue(step, index) {
-    return `${step.options[index]}-${index}`;
+    const option = effectiveOptions(step)[index] || "";
+    return `${optionTitle(option)}-${index}`;
 }
 
 export function isCustomStepValue(step, value) {
     if (!step || !value) {
         return false;
     }
-    return !step.options.some((option, index) => value === choiceOptionValue(step, index));
+    return !effectiveOptions(step).some((option, index) => value === `${optionTitle(option)}-${index}`);
+}
+
+export function effectiveOptions(step) {
+    const suggestions = state.suggestions && state.suggestions[step.id];
+    if (Array.isArray(suggestions) && suggestions.length) {
+        return suggestions;
+    }
+    return step.options || [];
+}
+
+function optionTitle(option) {
+    if (option && typeof option === "object") {
+        return option.title || "";
+    }
+    return option || "";
 }

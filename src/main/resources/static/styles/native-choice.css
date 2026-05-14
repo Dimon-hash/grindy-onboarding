@@ -208,6 +208,15 @@
     gap: 20px;
 }
 
+.phone-screen.has-custom-drawer .native-choice-footer {
+    bottom: max(18px, calc(var(--keyboard-inset) + env(safe-area-inset-bottom) + 16px));
+    gap: 0;
+}
+
+.phone-screen.has-custom-drawer .native-custom-button {
+    display: none;
+}
+
 .native-custom-button {
     display: grid;
     grid-template-columns: 1fr auto 1fr;

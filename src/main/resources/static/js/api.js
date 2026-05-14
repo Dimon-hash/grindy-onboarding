@@ -18,6 +18,13 @@ export async function loadCurrentUser() {
     state.user = await api("/api/me");
 }
 
+export async function loadOnboardingSuggestions() {
+    return api("/api/onboarding/suggestions", {
+        method: "POST",
+        body: state.onboarding
+    });
+}
+
 export async function api(path, options = {}) {
     const headers = options.headers ? {...options.headers} : {};
     if (options.auth !== false && state.token) {

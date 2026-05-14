@@ -1,7 +1,7 @@
 import {CUSTOM_VALUE} from "./js/config.js";
 import {steps} from "./js/steps.js";
 import {nodes, state} from "./js/state.js";
-import {authenticate, loadCurrentUser, saveOnboarding} from "./js/api.js";
+import {authenticate, loadCurrentUser, loadOnboardingSuggestions, saveOnboarding} from "./js/api.js";
 import {initTelegram, syncTheme, telegram} from "./js/telegram.js";
 import {renderStep} from "./js/screens.js";
 import {canContinue, choiceOptionValue, isCustomStepValue} from "./js/validators.js";
@@ -25,6 +25,7 @@ async function boot() {
         }
         loadFromUser();
         state.isReady = true;
+        refreshSuggestions({renderAfter: false});
         if (state.pendingSplashTap) {
             finishSplash();
         }
@@ -84,7 +85,10 @@ function screenClassFor(step) {
         step.id === "goal" ? "is-goal" : "",
         step.id === "experience" ? "is-experience" : "",
         step.id === "conditions" ? "is-current-state" : "",
+        step.id === "selectedGoal" ? "is-choose-goal" : "",
+        step.id === "selectedPlan" ? "is-your-plan" : "",
         step.id === state.customDrawerStepId ? "has-custom-drawer" : "",
+        state.planCorrectionOpen ? "has-plan-correction" : "",
         state.savingStepId === step.id ? "is-saving" : ""
     ].filter(Boolean).join(" ");
 }
@@ -106,8 +110,9 @@ function bindStep(step) {
     bindNavigation();
     bindGoalInput(step);
     bindCustomInput(step);
+    bindPlanCorrectionInput();
     bindChoiceButtons(step);
-    bindChooseGoalDots();
+    bindChooseGoalActions(step);
     bindPlanActions();
     bindCustomOpen(step);
 }
@@ -151,6 +156,7 @@ function bindGoalInput(step) {
         document.getElementById("counter").textContent = `${state.onboarding.goal.length} / ${step.limit}`;
         next.disabled = !canContinue(step);
         autosave();
+        queueSuggestionsRefresh();
     });
 }
 
@@ -197,13 +203,33 @@ function bindChoiceButtons(step) {
     });
 }
 
-function bindChooseGoalDots() {
+function bindChooseGoalActions(step) {
+    const selectGoal = (value) => {
+        if (!value || state.onboarding.selectedGoal === value) {
+            return;
+        }
+        blurActiveControl();
+        state.goalCardFlip = true;
+        state.onboarding.selectedGoal = value;
+        autosave();
+        render();
+        window.setTimeout(() => {
+            state.goalCardFlip = false;
+        }, 360);
+    };
+
     document.querySelectorAll(".choose-goal-dot").forEach((button) => {
         button.addEventListener("click", () => {
-            blurActiveControl();
-            state.onboarding.selectedGoal = button.dataset.value;
-            autosave();
-            render();
+            selectGoal(button.dataset.value);
+        });
+    });
+
+    document.querySelectorAll(".choose-goal-card-hit-area").forEach((button) => {
+        button.addEventListener("click", () => {
+            const values = [...document.querySelectorAll(".choose-goal-dot")].map((dot) => dot.dataset.value);
+            const currentIndex = Math.max(0, values.indexOf(state.onboarding.selectedGoal));
+            const nextIndex = (currentIndex + 1) % values.length;
+            selectGoal(values[nextIndex]);
         });
     });
 }
@@ -212,10 +238,71 @@ function bindPlanActions() {
     const changePlan = document.getElementById("change-plan");
     if (changePlan) {
         changePlan.addEventListener("click", () => {
-            state.onboarding.selectedPlan = "change-requested";
-            autosave();
+            blurActiveControl();
+            state.planCorrectionOpen = true;
+            state.planDraft = state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan"
+                ? state.onboarding.selectedPlan
+                : state.planDraft;
+            render();
+            window.requestAnimationFrame(() => {
+                const input = document.getElementById("plan-correction-input");
+                if (input) {
+                    input.focus({preventScroll: true});
+                }
+            });
         });
     }
+
+    const close = document.getElementById("plan-correction-close");
+    if (close) {
+        close.addEventListener("click", () => {
+            blurActiveControl();
+            closePlanCorrection();
+        });
+    }
+
+    const save = document.getElementById("plan-correction-save");
+    if (save) {
+        save.addEventListener("click", () => {
+            const draft = state.planDraft.trim();
+            if (!draft) {
+                return;
+            }
+            blurActiveControl();
+            state.onboarding.selectedPlan = draft;
+            state.planChanged = true;
+            state.planCorrectionOpen = false;
+            autosave();
+            render();
+        });
+    }
+}
+
+function bindPlanCorrectionInput() {
+    const input = document.getElementById("plan-correction-input");
+    if (!input) {
+        return;
+    }
+    const save = document.getElementById("plan-correction-save");
+    const layer = input.closest(".plan-correction-input-layer");
+    const art = document.querySelector(".your-plan-edit-art");
+    input.addEventListener("focus", () => setKeyboardOpen(true));
+    input.addEventListener("blur", () => setKeyboardOpen(false));
+    input.addEventListener("input", () => {
+        state.planDraft = input.value.slice(0, input.maxLength || 220);
+        const filled = Boolean(state.planDraft.trim());
+        if (layer) {
+            layer.classList.toggle("has-value", filled);
+        }
+        if (save) {
+            save.disabled = !filled;
+        }
+        if (art) {
+            art.src = filled
+                ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260514-your-plan"
+                : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260514-your-plan";
+        }
+    });
 }
 
 function bindCustomOpen(step) {
@@ -251,6 +338,9 @@ async function nextStep() {
         return;
     }
     blurActiveControl();
+    if (["goal", "experience", "conditions"].includes(step.id)) {
+        await refreshSuggestions({renderAfter: false});
+    }
     const showSaving = step.id === "experience" && state.customDrawerStepId !== step.id;
     if (showSaving) {
         state.savingStepId = step.id;
@@ -278,6 +368,10 @@ async function nextStep() {
 function previousStep() {
     blurActiveControl();
     const step = steps[state.onboardingStep];
+    if (state.planCorrectionOpen) {
+        closePlanCorrection();
+        return;
+    }
     if (step && state.customDrawerStepId === step.id) {
         closeCustomDrawer(step);
         return;
@@ -298,11 +392,19 @@ function closeCustomDrawer(step) {
     render();
 }
 
+function closePlanCorrection() {
+    state.planCorrectionOpen = false;
+    render();
+}
+
 function goTo(index) {
     state.isSplash = false;
     state.onboardingStep = Math.max(0, Math.min(index, steps.length - 1));
     if ((steps[state.onboardingStep] || {}).id !== state.customDrawerStepId) {
         state.customDrawerStepId = "";
+    }
+    if ((steps[state.onboardingStep] || {}).id !== "selectedPlan") {
+        state.planCorrectionOpen = false;
     }
     render();
 }
@@ -310,6 +412,65 @@ function goTo(index) {
 function autosave() {
     window.clearTimeout(autosave.timer);
     autosave.timer = window.setTimeout(saveOnboarding, 500);
+}
+
+function queueSuggestionsRefresh() {
+    window.clearTimeout(queueSuggestionsRefresh.timer);
+    queueSuggestionsRefresh.timer = window.setTimeout(() => {
+        refreshSuggestions({renderAfter: false});
+    }, 800);
+}
+
+async function refreshSuggestions({renderAfter = true} = {}) {
+    if ((state.onboarding.goal || "").trim().length < 80) {
+        return;
+    }
+    if (state.suggestionsRequest) {
+        await state.suggestionsRequest;
+        if (renderAfter) {
+            render();
+        }
+        return;
+    }
+    state.suggestionsLoading = true;
+    state.suggestionsRequest = (async () => {
+        const suggestions = await loadOnboardingSuggestions();
+        state.suggestions = {
+            experience: Array.isArray(suggestions.experience) ? suggestions.experience : [],
+            conditions: Array.isArray(suggestions.conditions) ? suggestions.conditions : [],
+            goals: Array.isArray(suggestions.goals) ? suggestions.goals : [],
+            plan: suggestions.plan || null
+        };
+        applySuggestionDefaults();
+    })();
+    try {
+        await state.suggestionsRequest;
+    } catch (error) {
+        console.warn("AI suggestions unavailable", error);
+    } finally {
+        state.suggestionsLoading = false;
+        state.suggestionsRequest = null;
+    }
+    if (renderAfter) {
+        render();
+    }
+}
+
+function applySuggestionDefaults() {
+    ["experience", "conditions"].forEach((id) => {
+        const step = steps.find((item) => item.id === id);
+        const current = state.onboarding[id] || "";
+        if (step && shouldReplaceGeneratedChoice(current)) {
+            state.onboarding[id] = choiceOptionValue(step, 0);
+        }
+    });
+    if ((!state.onboarding.selectedGoal || /^goal-(blue|orange|green)$/.test(state.onboarding.selectedGoal)) && state.suggestions.goals.length) {
+        state.onboarding.selectedGoal = `${state.suggestions.goals[0].title || "goal"}-0`;
+    }
+}
+
+function shouldReplaceGeneratedChoice(value) {
+    return !value || /^Вариант\s+\d-\d$/.test(value);
 }
 
 function blurActiveControl() {

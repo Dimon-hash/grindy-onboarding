@@ -11,6 +11,18 @@ export const state = {
     savingStepId: "",
     pendingSplashTap: false,
     customDrawerStepId: "",
+    goalCardFlip: false,
+    planCorrectionOpen: false,
+    planDraft: "",
+    planChanged: false,
+    suggestionsLoading: false,
+    suggestionsRequest: null,
+    suggestions: {
+        experience: [],
+        conditions: [],
+        goals: [],
+        plan: null
+    },
     customDrafts: {
         experience: "",
         conditions: ""
