@@ -33,6 +33,23 @@ export GRINDY_AI_BASE_URL="https://api.aitunnel.ru/v1"
 
 Mini App развернут на `https://5.129.200.75.sslip.io/`.
 
+Перед приглашением пользователей на production должны быть заданы:
+
+```bash
+GRINDY_ENV=production
+GRINDY_ALLOW_LOCAL_AUTH=false
+GRINDY_TELEGRAM_BOT_TOKEN=telegram-bot-token
+AITUNNEL_API_KEY=sk-...
+```
+
+`GRINDY_TELEGRAM_BOT_TOKEN` нужен для проверки подписи Telegram Mini App `initData`. Без него нельзя безопасно отличить реального Telegram-пользователя от подделанного запроса.
+
+Health-check:
+
+```bash
+curl https://5.129.200.75.sslip.io/api/health
+```
+
 ## Деплой
 
 ```bash
@@ -47,6 +64,7 @@ ssh user@server 'sudo mv /tmp/grindy-onboarding.service /etc/systemd/system/grin
 ```bash
 AITUNNEL_API_KEY=sk-...
 GRINDY_AI_MODEL=gpt-4o-mini
+GRINDY_TELEGRAM_BOT_TOKEN=...
 ```
 
 Для Telegram Mini App нужен публичный HTTPS URL. Токен бота не хранить в репозитории; после публикации URL привязать его в BotFather или через Bot API.

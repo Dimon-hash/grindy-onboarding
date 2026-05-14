@@ -6,6 +6,8 @@ After=network.target
 WorkingDirectory=/opt/grindy-onboarding
 Environment=PORT=8080
 Environment=GRINDY_DATA_DIR=/opt/grindy-onboarding/data
+Environment=GRINDY_ENV=production
+Environment=GRINDY_ALLOW_LOCAL_AUTH=false
 EnvironmentFile=-/etc/grindy-onboarding.env
 ExecStart=/usr/bin/java -jar /opt/grindy-onboarding/grindy-onboarding.jar
 Restart=always

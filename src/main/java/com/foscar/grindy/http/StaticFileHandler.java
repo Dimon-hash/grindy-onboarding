@@ -1,12 +1,13 @@
-package com.foscar.grindy;
+package com.foscar.grindy.http;
 
+import com.foscar.grindy.GrindyOnboardingApplication;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-final class StaticFileHandler {
-    void handle(HttpExchange exchange, String path) throws IOException {
+public final class StaticFileHandler {
+    public void handle(HttpExchange exchange, String path) throws IOException {
         String resourcePath = path;
         if ("/".equals(resourcePath) || !resourcePath.contains(".")) {
             resourcePath = "/index.html";

@@ -1,8 +1,11 @@
-package com.foscar.grindy;
+package com.foscar.grindy.user;
+
+import com.foscar.grindy.auth.UserContext;
+import com.foscar.grindy.onboarding.OnboardingData;
 
 import java.time.Instant;
 
-record UserProfile(
+public record UserProfile(
         String id,
         String telegramId,
         String username,
@@ -13,7 +16,7 @@ record UserProfile(
         String createdAt,
         OnboardingData onboarding
 ) {
-    static UserProfile from(UserContext user, OnboardingData onboarding) {
+    public static UserProfile from(UserContext user, OnboardingData onboarding) {
         return new UserProfile(
                 user.storageId(),
                 user.telegramId(),

@@ -1,6 +1,16 @@
-package com.foscar.grindy;
+package com.foscar.grindy.ai;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.foscar.grindy.auth.UserContext;
+import com.foscar.grindy.json.Json;
+import com.foscar.grindy.onboarding.CachedSuggestions;
+import com.foscar.grindy.onboarding.ChoiceSuggestion;
+import com.foscar.grindy.onboarding.GoalSuggestion;
+import com.foscar.grindy.onboarding.MilestoneSuggestion;
+import com.foscar.grindy.onboarding.OnboardingData;
+import com.foscar.grindy.onboarding.PlanSuggestion;
+import com.foscar.grindy.onboarding.SuggestionsResponse;
+import com.foscar.grindy.user.UserStore;
 
 import java.io.IOException;
 import java.net.URI;
@@ -15,7 +25,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
-final class AiSuggestionService {
+public final class AiSuggestionService {
     private static final String DEFAULT_BASE_URL = "https://api.aitunnel.ru/v1";
     private static final String DEFAULT_MODEL = "gpt-4o-mini";
 
@@ -26,7 +36,7 @@ final class AiSuggestionService {
     private final String baseUrl;
     private final String model;
 
-    AiSuggestionService(Json json, UserStore userStore) {
+    public AiSuggestionService(Json json, UserStore userStore) {
         this.json = json;
         this.userStore = userStore;
         this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(12)).build();
@@ -35,7 +45,7 @@ final class AiSuggestionService {
         this.model = System.getenv().getOrDefault("GRINDY_AI_MODEL", DEFAULT_MODEL);
     }
 
-    SuggestionsResponse suggestions(UserContext user, OnboardingData onboarding) throws IOException {
+    public SuggestionsResponse suggestions(UserContext user, OnboardingData onboarding) throws IOException {
         OnboardingData clean = onboarding.normalized();
         String fingerprint = fingerprint(user.storageId(), clean);
         CachedSuggestions cached = userStore.readSuggestions(user.storageId());

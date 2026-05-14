@@ -1,0 +1,30 @@
+package com.foscar.grindy.onboarding;
+
+import java.util.List;
+
+public record PlanSuggestion(String title, String summary, List<MilestoneSuggestion> milestones) {
+    public static PlanSuggestion fallback() {
+        return new PlanSuggestion(
+                "Твой план к цели",
+                "План собран под твою цель и текущие условия.",
+                List.of(
+                        new MilestoneSuggestion("Вы здесь", "Сегодня начинаем"),
+                        new MilestoneSuggestion("Первый месяц", "Собрать устойчивый ритм"),
+                        new MilestoneSuggestion("Второй месяц", "Усилить результат без перегруза"),
+                        new MilestoneSuggestion("Третий месяц", "Закрепить привычку и результат")
+                )
+        );
+    }
+
+    public PlanSuggestion normalized() {
+        List<MilestoneSuggestion> cleanMilestones = milestones == null || milestones.isEmpty()
+                ? fallback().milestones()
+                : milestones.stream().limit(5).map(MilestoneSuggestion::normalized).toList();
+        return new PlanSuggestion(clean(title, "Твой план к цели"), clean(summary, "План собран под твою цель и текущие условия."), cleanMilestones);
+    }
+
+    private static String clean(String value, String fallback) {
+        String clean = value == null ? "" : value.trim();
+        return clean.isBlank() ? fallback : clean;
+    }
+}

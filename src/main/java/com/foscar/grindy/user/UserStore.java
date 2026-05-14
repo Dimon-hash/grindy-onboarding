@@ -1,20 +1,25 @@
-package com.foscar.grindy;
+package com.foscar.grindy.user;
+
+import com.foscar.grindy.auth.AuthService;
+import com.foscar.grindy.json.Json;
+import com.foscar.grindy.onboarding.CachedSuggestions;
+import com.foscar.grindy.onboarding.OnboardingData;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-final class UserStore {
+public final class UserStore {
     private final Path usersDir;
     private final Json json;
 
-    UserStore(Path dataDir, Json json) {
+    public UserStore(Path dataDir, Json json) {
         this.usersDir = dataDir.resolve("users");
         this.json = json;
     }
 
-    OnboardingData readOnboarding(String storageId) throws IOException {
+    public OnboardingData readOnboarding(String storageId) throws IOException {
         Path userFile = onboardingPath(storageId);
         if (Files.exists(userFile)) {
             String saved = Files.readString(userFile, StandardCharsets.UTF_8).trim();
@@ -25,12 +30,12 @@ final class UserStore {
         return OnboardingData.empty();
     }
 
-    void saveOnboarding(String storageId, OnboardingData onboarding) throws IOException {
+    public void saveOnboarding(String storageId, OnboardingData onboarding) throws IOException {
         Files.createDirectories(usersDir);
         Files.writeString(onboardingPath(storageId), json.write(onboarding.normalized()), StandardCharsets.UTF_8);
     }
 
-    CachedSuggestions readSuggestions(String storageId) throws IOException {
+    public CachedSuggestions readSuggestions(String storageId) throws IOException {
         Path file = suggestionsPath(storageId);
         if (!Files.exists(file)) {
             return null;
@@ -42,7 +47,7 @@ final class UserStore {
         return json.read(saved, CachedSuggestions.class);
     }
 
-    void saveSuggestions(String storageId, CachedSuggestions suggestions) throws IOException {
+    public void saveSuggestions(String storageId, CachedSuggestions suggestions) throws IOException {
         Files.createDirectories(usersDir);
         Files.writeString(suggestionsPath(storageId), json.write(suggestions), StandardCharsets.UTF_8);
     }

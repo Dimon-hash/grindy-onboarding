@@ -1,35 +1,39 @@
 package com.foscar.grindy;
 
+import com.foscar.grindy.ai.AiSuggestionService;
+import com.foscar.grindy.auth.AuthService;
+import com.foscar.grindy.config.AppConfig;
+import com.foscar.grindy.http.ApiHandler;
+import com.foscar.grindy.http.RequestDispatcher;
+import com.foscar.grindy.http.StaticFileHandler;
+import com.foscar.grindy.json.Json;
+import com.foscar.grindy.user.UserStore;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 
 public final class GrindyOnboardingApplication {
-    private static final int DEFAULT_PORT = 8080;
-
     private GrindyOnboardingApplication() {
     }
 
     public static void main(String[] args) throws IOException {
-        int port = Integer.parseInt(System.getenv().getOrDefault("PORT", String.valueOf(DEFAULT_PORT)));
-        Path dataDir = Path.of(System.getenv().getOrDefault("GRINDY_DATA_DIR", "data"));
+        AppConfig config = AppConfig.fromEnv();
 
         Json json = new Json();
-        UserStore userStore = new UserStore(dataDir, json);
-        AuthService authService = new AuthService();
+        UserStore userStore = new UserStore(config.dataDir(), json);
+        AuthService authService = new AuthService(config);
         AiSuggestionService aiSuggestionService = new AiSuggestionService(json, userStore);
         ApiHandler apiHandler = new ApiHandler(json, authService, userStore, aiSuggestionService);
         StaticFileHandler staticFileHandler = new StaticFileHandler();
 
-        HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress("0.0.0.0", config.port()), 0);
         server.createContext("/", exchange -> RequestDispatcher.handle(exchange, apiHandler, staticFileHandler));
         server.setExecutor(Executors.newCachedThreadPool());
         server.start();
 
-        System.out.printf(Locale.ROOT, "Grindy onboarding started on http://0.0.0.0:%d%n", port);
+        System.out.printf(Locale.ROOT, "Grindy onboarding started on http://0.0.0.0:%d%n", config.port());
     }
 }

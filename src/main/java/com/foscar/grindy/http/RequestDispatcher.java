@@ -1,16 +1,18 @@
-package com.foscar.grindy;
+package com.foscar.grindy.http;
 
+import com.foscar.grindy.auth.AuthException;
+import com.foscar.grindy.json.Json;
 import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
-final class RequestDispatcher {
+public final class RequestDispatcher {
     private RequestDispatcher() {
     }
 
-    static void handle(HttpExchange exchange, ApiHandler apiHandler, StaticFileHandler staticFileHandler) throws IOException {
+    public static void handle(HttpExchange exchange, ApiHandler apiHandler, StaticFileHandler staticFileHandler) throws IOException {
         try {
             String path = normalizePath(exchange.getRequestURI().getPath());
             if (path.startsWith("/api/")) {
@@ -18,6 +20,8 @@ final class RequestDispatcher {
                 return;
             }
             staticFileHandler.handle(exchange, path);
+        } catch (AuthException error) {
+            HttpResponses.json(exchange, 401, "{\"message\":\"Unauthorized\"}");
         } catch (Exception error) {
             HttpResponses.json(exchange, 500, "{\"message\":\"" + Json.escape(error.getMessage()) + "\"}");
         } finally {
