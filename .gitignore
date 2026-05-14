@@ -1,0 +1,10 @@
+.env
+.env.*
+config/application-local.yml
+target/
+data/
+.idea/
+.m2/
+.docx_render_*/
+*.docx
+.DS_Store

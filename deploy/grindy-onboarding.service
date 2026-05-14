@@ -1,0 +1,14 @@
+[Unit]
+Description=Grindy onboarding mini app
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/grindy-onboarding
+Environment=PORT=8080
+Environment=GRINDY_DATA_DIR=/opt/grindy-onboarding/data
+ExecStart=/usr/bin/java -jar /opt/grindy-onboarding/grindy-onboarding.jar
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
