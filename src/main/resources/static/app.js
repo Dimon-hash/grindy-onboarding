@@ -164,6 +164,7 @@ function bindStep(step) {
     bindGoalInput(step);
     bindCustomInput(step);
     bindPlanCorrectionInput();
+    bindTextSuggestions();
     bindChoiceButtons(step);
     bindChooseGoalActions(step);
     bindPlanActions();
@@ -359,6 +360,21 @@ function bindPlanCorrectionInput() {
     });
 }
 
+function bindTextSuggestions() {
+    document.querySelectorAll(".ai-text-suggestion").forEach((button) => {
+        button.addEventListener("click", () => {
+            const input = document.getElementById(button.dataset.target);
+            if (!input) {
+                return;
+            }
+            const maxLength = Number(input.getAttribute("maxlength")) || button.dataset.value.length;
+            input.value = button.dataset.value.slice(0, maxLength);
+            input.dispatchEvent(new Event("input", {bubbles: true}));
+            input.focus({preventScroll: true});
+        });
+    });
+}
+
 function bindCustomOpen(step) {
     const custom = document.getElementById("custom");
     if (!custom) {
@@ -513,7 +529,7 @@ function saveOnboardingWithTimeout() {
 }
 
 async function refreshSuggestions({renderAfter = true} = {}) {
-    if ((state.onboarding.goal || "").trim().length < 80) {
+    if ((state.onboarding.goal || "").trim().length < 24) {
         return;
     }
     const requestKey = suggestionsKey();

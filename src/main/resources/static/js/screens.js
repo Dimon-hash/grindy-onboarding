@@ -107,11 +107,11 @@ function yourPlanStep(step) {
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
-            ${planOverlay(state.suggestions.plan)}
+            ${planOverlay(planForDisplay())}
             <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
         </div>
         <button id="back" class="your-plan-back-hit-area" type="button" aria-label="Назад"></button>
-        <button id="change-plan" class="your-plan-change-hit-area" type="button" aria-label="Скорректировать план"></button>
+        <button id="change-plan" class="your-plan-change-hit-area" type="button">Скорректировать план</button>
         <button id="next" class="your-plan-next-hit-area" type="button">${escapeHtml(step.button)}</button>
     `;
 }
@@ -129,6 +129,7 @@ function planCorrectionStep(step) {
         <label class="plan-correction-input-layer ${filled ? "has-value" : ""}">
             <textarea id="plan-correction-input" maxlength="220" enterkeyhint="done" aria-label="Что хотите поменять?" placeholder="Хочу сделать план короче и интенсивнее">${escapeHtml(draft)}</textarea>
         </label>
+        ${textSuggestions("plan-correction", planCorrectionHints(), "plan-correction-input")}
         <button id="plan-correction-save" class="plan-correction-save-hit-area" type="button" ${filled ? "" : "disabled"}>Скорректировать план</button>
     `;
 }
@@ -142,6 +143,7 @@ function goalStep(step) {
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
             <span id="counter" class="goal-counter">${value.length} / ${step.limit}</span>
         </label>
+        ${textSuggestions("goal", goalTextHints(value), "goal-input")}
         <button id="next" class="goal-next-button" type="button" ${canContinue(step) ? "" : "disabled"}>${escapeHtml(step.button)}</button>
     `;
 }
@@ -169,10 +171,11 @@ function nativeChoiceStep(step) {
             <p>${escapeHtml(step.subtitle)}</p>
         </section>
         ${drawerOpen ? `
-            <label class="native-choice-list native-custom-panel ${draft.trim() ? "has-value" : ""}">
+            <section class="native-choice-list native-custom-panel ${draft.trim() ? "has-value" : ""}">
                 <span>Свой вариант</span>
                 <textarea id="custom-choice-input" maxlength="220" enterkeyhint="done" placeholder="Опиши свой опыт или условия">${escapeHtml(draft)}</textarea>
-            </label>
+                ${textSuggestions("native-custom", choiceTextHints(step), "custom-choice-input")}
+            </section>
         ` : `
             <section class="native-choice-list" aria-label="${escapeAttr(step.title)}">
                 ${choiceOptions(step).map((option, index) => {
@@ -281,6 +284,23 @@ function planOverlay(plan) {
     `;
 }
 
+function planForDisplay() {
+    if (state.suggestions.plan && Array.isArray(state.suggestions.plan.milestones)) {
+        return state.suggestions.plan;
+    }
+    const goal = (state.onboarding.goal || "цели").trim();
+    return {
+        summary: `Примерный план под твою цель: ${goal.slice(0, 90)}${goal.length > 90 ? "..." : ""}`,
+        milestones: [
+            {title: "Старт", description: "Зафиксируй текущую точку и выбери один простой шаг на сегодня."},
+            {title: "Первая неделя", description: "Собери минимальный ритм: короткие действия, отметки прогресса и понятные напоминания."},
+            {title: "Первый месяц", description: "Убери то, что мешает чаще всего, и закрепи действия в обычном графике."},
+            {title: "Контроль", description: "Раз в неделю смотри, что сработало, и корректируй план без чувства вины."},
+            {title: "Закрепление", description: "Усиль результат и подготовь следующий уровень, когда базовый ритм станет устойчивым."}
+        ]
+    };
+}
+
 function experienceDrawerStep(step, draft) {
     return `
         <img class="screen-art experience-drawer-art" src="/experience-drawer-opened.svg?v=20260514-no-top-buttons" alt="${escapeAttr(step.title)}">
@@ -289,8 +309,62 @@ function experienceDrawerStep(step, draft) {
         <label class="experience-drawer-input-layer ${draft.trim() ? "has-value" : ""}">
             <textarea id="custom-choice-input" maxlength="220" enterkeyhint="done" aria-label="Свой вариант">${escapeHtml(draft)}</textarea>
         </label>
+        ${textSuggestions("experience-drawer", choiceTextHints(step), "custom-choice-input")}
         <button id="next" class="experience-drawer-next-button" type="button" ${canContinue(step) ? "" : "disabled"}>${escapeHtml(step.button)}</button>
     `;
+}
+
+function textSuggestions(kind, suggestions, targetId) {
+    const clean = [...new Set((suggestions || []).map((item) => String(item || "").trim()).filter(Boolean))].slice(0, 3);
+    if (!clean.length) {
+        return "";
+    }
+    return `
+        <section class="ai-text-suggestions ai-text-suggestions-${kind}" aria-label="AI-подсказки">
+            ${clean.map((suggestion) => `
+                <button class="ai-text-suggestion" type="button" data-target="${escapeAttr(targetId)}" data-value="${escapeAttr(suggestion)}">
+                    ${escapeHtml(suggestion)}
+                </button>
+            `).join("")}
+        </section>
+    `;
+}
+
+function goalTextHints(value) {
+    const base = String(value || "").trim();
+    const goals = Array.isArray(state.suggestions.goals) ? state.suggestions.goals : [];
+    if (goals.length) {
+        return goals.map((goal) => {
+            const title = goal.title || "Дойти до цели";
+            const description = goal.description || "с понятным планом и спокойным темпом";
+            return `${title}: ${description}`;
+        });
+    }
+    if (base.length > 10) {
+        return [
+            `${base}. Хочу понятный план на 3 месяца, чтобы двигаться без перегруза и видеть прогресс каждую неделю.`,
+            `${base}. Важно встроить это в обычный график, с короткими шагами и поддержкой, когда мотивация проседает.`
+        ];
+    }
+    return [
+        "Хочу выбрать одну важную цель и довести её до результата за 3 месяца без резких рывков.",
+        "Хочу собрать понятный план, который будет учитывать мой график, опыт и реальные ограничения."
+    ];
+}
+
+function choiceTextHints(step) {
+    return choiceOptions(step).map((option) => `${option.title}. ${option.description}`);
+}
+
+function planCorrectionHints() {
+    const plan = state.suggestions.plan;
+    const milestones = plan && Array.isArray(plan.milestones) ? plan.milestones : [];
+    const milestoneTitle = milestones[1] && milestones[1].title ? milestones[1].title.toLowerCase() : "первые шаги";
+    return [
+        "Сделай план мягче и реалистичнее на загруженные дни.",
+        `Добавь больше конкретики про ${milestoneTitle}.`,
+        "Разбей действия на короткие шаги по 15-20 минут."
+    ];
 }
 
 function textareaStep(step) {

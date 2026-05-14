@@ -64,10 +64,31 @@
     letter-spacing: 0;
 }
 
+.ai-text-suggestions-experience-drawer {
+    position: absolute;
+    left: 51px;
+    right: 51px;
+    top: 421px;
+    z-index: 18;
+}
+
+.phone-screen.is-experience.has-custom-drawer::after {
+    content: "";
+    position: absolute;
+    left: 34px;
+    top: 442px;
+    z-index: 17;
+    width: 322px;
+    height: 100px;
+    border-radius: 0 0 18px 18px;
+    background: #fff;
+    pointer-events: none;
+}
+
 .experience-drawer-next-button {
     position: absolute;
     left: 34px;
-    top: 447px;
+    top: 486px;
     z-index: 18;
     width: 322px;
     height: 50px;

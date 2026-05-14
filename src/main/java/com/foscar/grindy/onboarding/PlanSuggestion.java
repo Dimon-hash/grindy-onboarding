@@ -21,8 +21,8 @@ public record PlanSuggestion(String title, String summary, List<MilestoneSuggest
                 ? fallback().milestones()
                 : milestones.stream().limit(5).map(MilestoneSuggestion::normalized).toList();
         return new PlanSuggestion(
-                clean(title, "Твой план к цели", 44),
-                clean(summary, "План собран под твою цель и текущие условия.", 120),
+                clean(title, "Твой план к цели", 56),
+                clean(summary, "План собран под твою цель и текущие условия.", 180),
                 cleanMilestones
         );
     }

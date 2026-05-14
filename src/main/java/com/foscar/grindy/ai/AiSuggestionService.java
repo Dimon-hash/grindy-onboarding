@@ -28,6 +28,7 @@ import java.util.Map;
 public final class AiSuggestionService {
     private static final String DEFAULT_BASE_URL = "https://api.aitunnel.ru/v1";
     private static final String DEFAULT_MODEL = "gpt-4o-mini";
+    private static final String PROMPT_VERSION = "20260515-ai-hints";
 
     private final Json json;
     private final UserStore userStore;
@@ -122,7 +123,8 @@ public final class AiSuggestionService {
                 Условия: %s
 
                 Сгенерируй варианты так, чтобы они выглядели как реальные ответы в онбординге, а не как общая статья.
-                Заголовки до 32 символов. Описания до 95 символов. Bullet до 38 символов.
+                Заголовки вариантов до 32 символов. Описания вариантов до 95 символов. Bullet до 38 символов.
+                Для milestones в плане пиши прикладные описания до 130 символов: что именно делать, как часто и зачем.
                 """.formatted(
                 shortHash(user.storageId()),
                 clip(onboarding.goal(), 500),
@@ -195,7 +197,7 @@ public final class AiSuggestionService {
     }
 
     private String fingerprint(String userId, OnboardingData onboarding) {
-        return shortHash(userId + "|" + onboarding.goal() + "|" + onboarding.experience() + "|" + onboarding.conditions());
+        return shortHash(PROMPT_VERSION + "|" + userId + "|" + onboarding.goal() + "|" + onboarding.experience() + "|" + onboarding.conditions());
     }
 
     private String shortHash(String value) {

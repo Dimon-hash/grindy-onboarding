@@ -43,6 +43,37 @@ button {
     -webkit-tap-highlight-color: transparent;
 }
 
+.ai-text-suggestions {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 0 6px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ai-text-suggestions::-webkit-scrollbar {
+    display: none;
+}
+
+.ai-text-suggestion {
+    flex: 0 0 auto;
+    max-width: 238px;
+    min-height: 34px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(0, 86, 249, 0.08);
+    color: var(--blue);
+    font-size: 13px;
+    line-height: 130%;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
 .app-shell,
 .workspace,
 .onboarding-wizard {

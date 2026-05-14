@@ -2,7 +2,7 @@ package com.foscar.grindy.onboarding;
 
 public record MilestoneSuggestion(String title, String description) {
     public MilestoneSuggestion normalized() {
-        return new MilestoneSuggestion(clean(title, "Этап", 28), clean(description, "Понятный следующий шаг", 72));
+        return new MilestoneSuggestion(clean(title, "Этап", 40), clean(description, "Понятный следующий шаг", 140));
     }
 
     private static String clean(String value, String fallback, int limit) {

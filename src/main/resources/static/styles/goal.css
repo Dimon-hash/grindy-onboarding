@@ -69,6 +69,15 @@
     letter-spacing: -0.02em;
 }
 
+.ai-text-suggestions-goal {
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: max(104px, calc(env(safe-area-inset-bottom) + 87px + var(--keyboard-inset)));
+    z-index: 8;
+    transition: bottom 180ms ease;
+}
+
 .goal-input-layer:not(.has-value):not(.is-focused) .goal-counter {
     opacity: 0;
 }

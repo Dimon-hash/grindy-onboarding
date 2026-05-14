@@ -115,7 +115,7 @@
 .native-custom-panel textarea {
     display: block;
     width: 100%;
-    min-height: 186px;
+    min-height: 146px;
     padding: 0;
     border: 0;
     outline: 0;
@@ -126,6 +126,10 @@
     font-size: 16px;
     line-height: 140%;
     font-weight: 600;
+}
+
+.native-custom-panel .ai-text-suggestions {
+    margin-top: 10px;
 }
 
 .native-custom-panel textarea::placeholder {
@@ -376,7 +380,7 @@
     }
 
     .native-custom-panel textarea {
-        min-height: 168px;
+        min-height: 132px;
     }
 
     .native-choice-card {
