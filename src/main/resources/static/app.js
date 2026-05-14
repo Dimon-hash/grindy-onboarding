@@ -353,8 +353,8 @@ function bindPlanCorrectionInput() {
         }
         if (art) {
             art.src = filled
-                ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260514-your-plan"
-                : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260514-your-plan";
+                ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260514-no-top-buttons"
+                : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260514-no-top-buttons";
         }
     });
 }

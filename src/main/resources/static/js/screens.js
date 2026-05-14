@@ -6,12 +6,12 @@ import {escapeAttr, escapeHtml} from "./utils.js";
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260513-0400" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260514-no-top-buttons" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260513-0500" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260514-no-top-buttons" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -60,10 +60,10 @@ function chooseGoalStep(step) {
     const selectedIndex = Math.max(0, goals.findIndex((goal, index) => goalValue(goal, index) === selected));
     const selectedGoal = goals[selectedIndex] || goals[0];
     const art = [
-        "/Choose%20the%20Goal.svg?v=20260514-choose-goal",
-        "/Choose%20the%20Goal-2.svg?v=20260514-choose-goal",
-        "/Choose%20the%20Goal-3.svg?v=20260514-choose-goal"
-    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260514-choose-goal";
+        "/Choose%20the%20Goal.svg?v=20260514-no-top-buttons",
+        "/Choose%20the%20Goal-2.svg?v=20260514-no-top-buttons",
+        "/Choose%20the%20Goal-3.svg?v=20260514-no-top-buttons"
+    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260514-no-top-buttons";
 
     return `
         <div class="choose-goal-stage ${state.goalCardFlip ? "is-flipping" : ""}">
@@ -102,8 +102,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260514-your-plan"
-        : "/Your%20Plan.svg?v=20260514-your-plan";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260514-no-top-buttons"
+        : "/Your%20Plan.svg?v=20260514-no-top-buttons";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -120,8 +120,8 @@ function planCorrectionStep(step) {
     const draft = state.planDraft || "";
     const filled = Boolean(draft.trim());
     const art = filled
-        ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260514-your-plan"
-        : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260514-your-plan";
+        ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260514-no-top-buttons"
+        : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260514-no-top-buttons";
     return `
         <img class="screen-art your-plan-edit-art" src="${art}" alt="${escapeAttr(step.title)}">
         <button id="back" class="your-plan-back-hit-area" type="button" aria-label="Назад"></button>
@@ -136,7 +136,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260513-0600" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260514-no-top-buttons" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -283,7 +283,7 @@ function planOverlay(plan) {
 
 function experienceDrawerStep(step, draft) {
     return `
-        <img class="screen-art experience-drawer-art" src="/experience-drawer-opened.svg?v=20260514-custom-modal" alt="${escapeAttr(step.title)}">
+        <img class="screen-art experience-drawer-art" src="/experience-drawer-opened.svg?v=20260514-no-top-buttons" alt="${escapeAttr(step.title)}">
         <button id="back" class="experience-drawer-back-hit-area" type="button" aria-label="Назад"></button>
         <button id="custom-drawer-close" class="experience-drawer-close-hit-area" type="button" aria-label="Закрыть свой вариант"></button>
         <label class="experience-drawer-input-layer ${draft.trim() ? "has-value" : ""}">
