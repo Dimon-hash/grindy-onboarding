@@ -6,12 +6,12 @@ import {escapeAttr, escapeHtml} from "./utils.js";
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260517-your-plan-fix" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260517-suggestion-append" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260517-your-plan-fix" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260517-suggestion-append" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -60,10 +60,10 @@ function chooseGoalStep(step) {
     const selectedIndex = Math.max(0, goals.findIndex((goal, index) => goalValue(goal, index) === selected));
     const selectedGoal = goals[selectedIndex] || goals[0];
     const art = [
-        "/Choose%20the%20Goal.svg?v=20260517-your-plan-fix",
-        "/Choose%20the%20Goal-2.svg?v=20260517-your-plan-fix",
-        "/Choose%20the%20Goal-3.svg?v=20260517-your-plan-fix"
-    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260517-your-plan-fix";
+        "/Choose%20the%20Goal.svg?v=20260517-suggestion-append",
+        "/Choose%20the%20Goal-2.svg?v=20260517-suggestion-append",
+        "/Choose%20the%20Goal-3.svg?v=20260517-suggestion-append"
+    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260517-suggestion-append";
 
     return `
         <div class="choose-goal-stage ${state.goalCardFlip ? "is-flipping" : ""}">
@@ -102,8 +102,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-your-plan-fix"
-        : "/Your%20Plan.svg?v=20260517-your-plan-fix";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-suggestion-append"
+        : "/Your%20Plan.svg?v=20260517-suggestion-append";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -121,7 +121,7 @@ function planCorrectionStep(step) {
     const filled = Boolean(draft.trim());
     return `
         <div class="your-plan-scroll is-dimmed">
-            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-your-plan-fix" alt="${escapeAttr(step.title)}">
+            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-suggestion-append" alt="${escapeAttr(step.title)}">
             ${planOverlay(planForDisplay())}
             <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
         </div>
@@ -142,7 +142,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260517-your-plan-fix" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260517-suggestion-append" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -174,7 +174,7 @@ function nativeChoiceStep(step) {
                 value: selected,
                 custom: true
             },
-            ...baseOptions
+            ...baseOptions.slice(1)
         ]
         : baseOptions;
 
@@ -368,8 +368,9 @@ export function goalTextHints(value) {
     }
     if (base.length > 10) {
         return [
-            `${base}. Хочу понятный план на 3 месяца, чтобы двигаться без перегруза и видеть прогресс каждую неделю.`,
-            `${base}. Важно встроить это в обычный график, с короткими шагами и поддержкой, когда мотивация проседает.`
+            "Уточнить срок, измеримый результат и главный критерий успеха.",
+            "Добавить текущий уровень, ограничения и сколько времени готов уделять в неделю.",
+            "Сделать цель конкретнее: что именно должно измениться через 3 месяца."
         ];
     }
     return [

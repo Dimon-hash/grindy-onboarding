@@ -362,10 +362,7 @@ function bindTextSuggestions() {
             if (!input) {
                 return;
             }
-            const maxLength = Number(input.getAttribute("maxlength")) || button.dataset.value.length;
-            input.value = button.dataset.value.slice(0, maxLength);
-            input.dispatchEvent(new Event("input", {bubbles: true}));
-            input.focus({preventScroll: true});
+            appendSuggestionToInput(input, button.dataset.value || "");
         });
     });
 }
@@ -387,13 +384,23 @@ function updateGoalTextSuggestions(value) {
             if (!input) {
                 return;
             }
-            const maxLength = Number(input.getAttribute("maxlength")) || hint.length;
-            input.value = hint.slice(0, maxLength);
-            input.dispatchEvent(new Event("input", {bubbles: true}));
-            input.focus({preventScroll: true});
+            appendSuggestionToInput(input, hint);
         });
         return button;
     }));
+}
+
+function appendSuggestionToInput(input, suggestion) {
+    const addition = String(suggestion || "").trim();
+    if (!addition) {
+        return;
+    }
+    const maxLength = Number(input.getAttribute("maxlength")) || 1000;
+    const current = input.value.trimEnd();
+    const separator = current ? (/[.!?…:;]$/.test(current) ? " " : ". ") : "";
+    input.value = `${current}${separator}${addition}`.slice(0, maxLength);
+    input.dispatchEvent(new Event("input", {bubbles: true}));
+    input.focus({preventScroll: true});
 }
 
 function bindCustomOpen(step) {
