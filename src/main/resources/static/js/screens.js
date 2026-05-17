@@ -6,12 +6,12 @@ import {escapeAttr, escapeHtml} from "./utils.js";
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260517-suggestion-append" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260517-card-book" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260517-suggestion-append" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260517-card-book" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -59,17 +59,14 @@ function chooseGoalStep(step) {
     const selected = state.onboarding.selectedGoal;
     const selectedIndex = Math.max(0, goals.findIndex((goal, index) => goalValue(goal, index) === selected));
     const selectedGoal = goals[selectedIndex] || goals[0];
-    const art = [
-        "/Choose%20the%20Goal.svg?v=20260517-suggestion-append",
-        "/Choose%20the%20Goal-2.svg?v=20260517-suggestion-append",
-        "/Choose%20the%20Goal-3.svg?v=20260517-suggestion-append"
-    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260517-suggestion-append";
+    const art = chooseGoalArt(selectedIndex);
+    const flipArt = chooseGoalArt(state.goalCardFlipFromIndex);
 
     return `
-        <div class="choose-goal-stage ${state.goalCardFlip ? "is-flipping" : ""}">
+        <div class="choose-goal-stage ${state.goalCardFlip ? `is-flipping is-flipping-${escapeAttr(state.goalCardFlipDirection)}` : ""}">
             <img class="screen-art choose-goal-art" src="${art}" alt="${escapeAttr(step.title)}">
             <span class="choose-goal-flip-card" aria-hidden="true">
-                <img src="${art}" alt="">
+                <img src="${flipArt}" alt="">
             </span>
             ${goalCardOverlay(selectedGoal, selectedIndex)}
         </div>
@@ -102,8 +99,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-suggestion-append"
-        : "/Your%20Plan.svg?v=20260517-suggestion-append";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-card-book"
+        : "/Your%20Plan.svg?v=20260517-card-book";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -121,7 +118,7 @@ function planCorrectionStep(step) {
     const filled = Boolean(draft.trim());
     return `
         <div class="your-plan-scroll is-dimmed">
-            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-suggestion-append" alt="${escapeAttr(step.title)}">
+            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-card-book" alt="${escapeAttr(step.title)}">
             ${planOverlay(planForDisplay())}
             <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
         </div>
@@ -142,7 +139,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260517-suggestion-append" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260517-card-book" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -215,8 +212,8 @@ function nativeChoiceStep(step) {
             </section>
         `}
         <footer class="native-choice-footer">
-            ${step.custom ? `
-                <button id="custom" class="native-custom-button ${selectedIsCustom ? "is-selected" : ""}" type="button" aria-pressed="${selectedIsCustom ? "true" : "false"}">
+            ${step.custom && !selectedIsCustom ? `
+                <button id="custom" class="native-custom-button" type="button" aria-pressed="false">
                     <span class="native-custom-divider"></span>
                     <span class="native-custom-label"><span class="native-pencil" aria-hidden="true"></span>Свой вариант</span>
                     <span class="native-custom-divider"></span>
@@ -240,6 +237,14 @@ function choiceOptions(step) {
             description: "Более подробное описание в две такие строки, может больше"
         };
     });
+}
+
+function chooseGoalArt(index) {
+    return [
+        "/Choose%20the%20Goal.svg?v=20260517-card-book",
+        "/Choose%20the%20Goal-2.svg?v=20260517-card-book",
+        "/Choose%20the%20Goal-3.svg?v=20260517-card-book"
+    ][index] || "/Choose%20the%20Goal.svg?v=20260517-card-book";
 }
 
 function goalOptions(step) {

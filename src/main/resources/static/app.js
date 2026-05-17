@@ -260,32 +260,64 @@ function bindChoiceButtons(step) {
 }
 
 function bindChooseGoalActions(step) {
-    const selectGoal = (value) => {
+    const values = [...document.querySelectorAll(".choose-goal-dot")].map((dot) => dot.dataset.value);
+    const selectGoal = (value, direction = "next") => {
         if (!value || state.onboarding.selectedGoal === value) {
             return;
         }
         blurActiveControl();
+        state.goalCardFlipFromIndex = Math.max(0, values.indexOf(state.onboarding.selectedGoal));
+        state.goalCardFlipDirection = direction;
         state.goalCardFlip = true;
         state.onboarding.selectedGoal = value;
         autosave();
         render();
         window.setTimeout(() => {
             state.goalCardFlip = false;
+            state.goalCardFlipFromIndex = Math.max(0, values.indexOf(state.onboarding.selectedGoal));
         }, 360);
     };
 
     document.querySelectorAll(".choose-goal-dot").forEach((button) => {
         button.addEventListener("click", () => {
-            selectGoal(button.dataset.value);
+            const currentIndex = Math.max(0, values.indexOf(state.onboarding.selectedGoal));
+            const targetIndex = Math.max(0, values.indexOf(button.dataset.value));
+            selectGoal(button.dataset.value, targetIndex >= currentIndex ? "next" : "prev");
         });
     });
 
     document.querySelectorAll(".choose-goal-card-hit-area").forEach((button) => {
-        button.addEventListener("click", () => {
-            const values = [...document.querySelectorAll(".choose-goal-dot")].map((dot) => dot.dataset.value);
+        let startX = 0;
+        let startY = 0;
+        let didSwipe = false;
+        const goRelative = (delta) => {
+            if (!values.length) {
+                return;
+            }
             const currentIndex = Math.max(0, values.indexOf(state.onboarding.selectedGoal));
-            const nextIndex = (currentIndex + 1) % values.length;
-            selectGoal(values[nextIndex]);
+            const targetIndex = (currentIndex + delta + values.length) % values.length;
+            selectGoal(values[targetIndex], delta > 0 ? "next" : "prev");
+        };
+        button.addEventListener("pointerdown", (event) => {
+            startX = event.clientX;
+            startY = event.clientY;
+            didSwipe = false;
+            button.setPointerCapture?.(event.pointerId);
+        });
+        button.addEventListener("pointerup", (event) => {
+            const deltaX = event.clientX - startX;
+            const deltaY = event.clientY - startY;
+            if (Math.abs(deltaX) > 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.15) {
+                didSwipe = true;
+                goRelative(deltaX < 0 ? 1 : -1);
+            }
+        });
+        button.addEventListener("click", () => {
+            if (didSwipe) {
+                didSwipe = false;
+                return;
+            }
+            goRelative(1);
         });
     });
 }

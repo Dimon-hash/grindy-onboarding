@@ -13,6 +13,8 @@ export const state = {
     pendingSplashTap: false,
     customDrawerStepId: "",
     goalCardFlip: false,
+    goalCardFlipDirection: "next",
+    goalCardFlipFromIndex: 0,
     planCorrectionOpen: false,
     planDraft: "",
     planChanged: false,
