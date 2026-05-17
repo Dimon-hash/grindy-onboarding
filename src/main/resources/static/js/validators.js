@@ -43,6 +43,13 @@ export function choiceTitleFromValue(value) {
 }
 
 export function effectiveOptions(step) {
+    if (!step) {
+        return [];
+    }
+    const snapshot = state.choiceSnapshots && state.choiceSnapshots[step.id];
+    if (state.choiceTouched && state.choiceTouched[step.id] && Array.isArray(snapshot) && snapshot.length) {
+        return snapshot;
+    }
     const suggestions = state.suggestions && state.suggestions[step.id];
     if (Array.isArray(suggestions) && suggestions.length && suggestionsMatchCurrentGoal()) {
         return suggestions;
@@ -77,39 +84,39 @@ function contextualOptions(step) {
     if (step.id === "experience") {
         return [
             {
-                title: "Пробовал сам",
-                description: `Уже пытался двигаться к цели «${goal}», но без стабильной системы.`
+                title: "Начинаю с нуля",
+                description: "Пока нет системы, нужен простой старт и первые понятные действия."
             },
             {
                 title: "Были рывки",
-                description: "Получалось включаться на короткое время, потом темп проседал."
+                description: "Пробовал начинать, но не хватало стабильности и проверки прогресса."
             },
             {
-                title: "Нужен контроль",
-                description: "Лучше получается, когда есть план, проверки и понятные шаги."
+                title: "Есть рабочий опыт",
+                description: "Уже знаю, что помогает, нужно собрать это в регулярный план."
             },
             {
-                title: "Начинаю заново",
-                description: `Хочу спокойно собрать новый подход под цель «${goal}».`
+                title: "Нужна поддержка",
+                description: "Лучше двигаюсь, когда есть подсказки, обратная связь и контроль."
             }
         ];
     }
     return [
         {
             title: "Мало времени",
-            description: `Нужны короткие действия для цели «${goal}», которые влезут в день.`
+            description: "Нужны короткие шаги по 10-20 минут, которые реально влезут в день."
         },
         {
             title: "Нужна гибкость",
-            description: "План должен учитывать работу, усталость и непредсказуемые дни."
+            description: "План должен иметь запасной вариант для усталости и срывов графика."
         },
         {
             title: "Есть ограничения",
-            description: "Важно учесть здоровье, график, бюджет или поддержку окружения."
+            description: "Важно учесть бюджет, здоровье, окружение, расстояние или расписание."
         },
         {
-            title: "Без перегруза",
-            description: "Хочу двигаться регулярно, но без резких скачков и чувства вины."
+            title: "Нужна среда",
+            description: "Помогут люди, места, напоминания и заранее подготовленные условия."
         }
     ];
 }

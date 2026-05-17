@@ -28,6 +28,14 @@ export const state = {
         goals: [],
         plan: null
     },
+    choiceTouched: {
+        experience: false,
+        conditions: false
+    },
+    choiceSnapshots: {
+        experience: [],
+        conditions: []
+    },
     customDrafts: {
         experience: "",
         conditions: ""

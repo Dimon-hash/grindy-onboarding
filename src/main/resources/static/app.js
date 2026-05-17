@@ -4,7 +4,7 @@ import {nodes, state} from "./js/state.js";
 import {ApiError, authenticate, loadCurrentUser, loadOnboardingSuggestions, saveOnboarding} from "./js/api.js";
 import {initTelegram, syncTheme, telegram} from "./js/telegram.js";
 import {goalTextHints, renderStep} from "./js/screens.js";
-import {canContinue, choiceOptionValue, isCustomStepValue, isSavedChoiceValue} from "./js/validators.js";
+import {canContinue, choiceOptionValue, effectiveOptions, isCustomStepValue, isSavedChoiceValue} from "./js/validators.js";
 import {wait} from "./js/utils.js";
 
 initTelegram();
@@ -70,6 +70,10 @@ function loadFromUser() {
     ["experience", "conditions"].forEach((key) => {
         const step = steps.find((item) => item.id === key);
         const value = state.onboarding[key];
+        if (step && value && value !== CUSTOM_VALUE) {
+            state.choiceTouched[key] = true;
+            state.choiceSnapshots[key] = effectiveOptions(step);
+        }
         if (step && isCustomStepValue(step, value) && !isSavedChoiceValue(value) && value !== CUSTOM_VALUE) {
             state.customDrafts[key] = value;
         }
@@ -205,7 +209,11 @@ function bindGoalInput(step) {
         setKeyboardOpen(false);
     });
     input.addEventListener("input", () => {
+        const previousGoal = state.onboarding.goal;
         state.onboarding.goal = input.value.slice(0, step.limit);
+        if (previousGoal !== state.onboarding.goal) {
+            resetChoiceLocksForNewGoal();
+        }
         if (field) {
             field.classList.toggle("has-value", Boolean(state.onboarding.goal.trim()));
         }
@@ -216,6 +224,13 @@ function bindGoalInput(step) {
         queueSuggestionsRefresh();
     });
     input.addEventListener("keydown", handleDoneKey);
+}
+
+function resetChoiceLocksForNewGoal() {
+    ["experience", "conditions"].forEach((id) => {
+        state.choiceTouched[id] = false;
+        state.choiceSnapshots[id] = [];
+    });
 }
 
 function bindCustomInput(step) {
@@ -257,6 +272,8 @@ function bindChoiceButtons(step) {
         button.addEventListener("click", () => {
             blurActiveControl();
             state.customDrawerStepId = "";
+            state.choiceTouched[step.id] = true;
+            state.choiceSnapshots[step.id] = effectiveOptions(step);
             state.onboarding[step.id] = button.dataset.value;
             autosave();
             render();
@@ -484,6 +501,8 @@ function commitCustomDrawer(step) {
         return;
     }
     blurActiveControl();
+    state.choiceTouched[step.id] = true;
+    state.choiceSnapshots[step.id] = effectiveOptions(step);
     state.onboarding[step.id] = draft;
     state.customDrawerStepId = "";
     autosave();
@@ -680,6 +699,7 @@ function applySuggestionDefaults() {
         const current = state.onboarding[id] || "";
         if (step && shouldReplaceGeneratedChoice(step, current, id)) {
             state.onboarding[id] = choiceOptionValue(step, 0);
+            state.choiceSnapshots[id] = effectiveOptions(step);
         }
     });
     if ((!state.onboarding.selectedGoal || /^goal-(blue|orange|green)$/.test(state.onboarding.selectedGoal)) && state.suggestions.goals.length) {
@@ -688,6 +708,9 @@ function applySuggestionDefaults() {
 }
 
 function shouldReplaceGeneratedChoice(step, value, id) {
+    if (state.choiceTouched[id]) {
+        return false;
+    }
     if (!value || /^Вариант\s+\d-\d$/.test(value)) {
         return true;
     }

@@ -1,5 +1,5 @@
 export const CUSTOM_VALUE = "__custom__";
-export const APP_VERSION = "20260517-goal-loader";
+export const APP_VERSION = "20260517-stable-choice-plan";
 
 export function resetStoredUiVersion() {
     if (localStorage.getItem("grindy.uiVersion") === APP_VERSION) {
