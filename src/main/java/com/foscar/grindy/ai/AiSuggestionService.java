@@ -28,7 +28,7 @@ import java.util.Map;
 public final class AiSuggestionService {
     private static final String DEFAULT_BASE_URL = "https://api.aitunnel.ru/v1";
     private static final String DEFAULT_MODEL = "gpt-4o-mini";
-    private static final String PROMPT_VERSION = "20260517-plan-detail";
+    private static final String PROMPT_VERSION = "20260517-short-ready-hints";
 
     private final Json json;
     private final UserStore userStore;
@@ -103,6 +103,7 @@ public final class AiSuggestionService {
         return """
                 Ты продуктовый AI-коуч для приложения Grindy. Нужно создавать короткие, конкретные варианты ответов и план достижения цели.
                 Пиши по-русски, дружелюбно, без медицинских обещаний и без опасных советов.
+                Варианты должны быть готовыми к выбору: пользователь нажимает и почти не редактирует.
                 Верни только JSON без markdown. Схема:
                 {
                   "experience":[{"title":"...","description":"..."} x4],
@@ -123,7 +124,9 @@ public final class AiSuggestionService {
                 Условия: %s
 
                 Сгенерируй варианты так, чтобы они выглядели как реальные ответы в онбординге, а не как общая статья.
-                Заголовки вариантов до 32 символов. Описания вариантов до 95 символов. Bullet до 38 символов.
+                Для goals.title пиши короткую готовую цель до 34 символов, без двоеточий, без пояснений и без "Добавить...".
+                Примеры goals.title: "Набрать 5 кг мышц", "Сбросить 5 кг", "Учить английский 30 минут".
+                Заголовки вариантов до 32 символов. Описания вариантов до 88 символов. Bullet до 34 символов.
                 Для milestones в плане пиши 6-8 прикладных этапов до 150 символов: что именно делать, как часто, с кем/чем сверяться и зачем.
                 """.formatted(
                 shortHash(user.storageId()),
@@ -188,15 +191,31 @@ public final class AiSuggestionService {
     }
 
     private String titleFor(String goal, String mode) {
-        String clean = clip(goal.replaceAll("\\s+", " "), 42);
-        if (clean.length() < 12) {
-            return "Дойти до цели " + mode;
+        String compact = goal.replaceAll("\\s+", " ").trim();
+        String lower = compact.toLowerCase();
+        if (lower.matches(".*(мышц|мышеч|накач|зал|трен|сил).*")) {
+            return switch (mode) {
+                case "активно" -> "Увеличить силу";
+                case "надолго" -> "Закрепить тренировки";
+                default -> "Набрать 4-6 кг мышц";
+            };
         }
-        return switch (mode) {
-            case "активно" -> "Ускорить: " + clip(clean, 24);
-            case "надолго" -> "Закрепить: " + clip(clean, 24);
-            default -> "Начать: " + clip(clean, 28);
-        };
+        if (lower.matches(".*(похуд|вес|жир|сброс).*")) {
+            return switch (mode) {
+                case "активно" -> "Сбросить 5 кг";
+                case "надолго" -> "Удержать новый вес";
+                default -> "Похудеть без срывов";
+            };
+        }
+        String clean = compact
+                .replaceFirst("(?iu)^я\\s+хочу\\s+", "")
+                .replaceFirst("(?iu)^хочу\\s+", "")
+                .replaceAll("[.:;]+$", "")
+                .trim();
+        if (clean.length() < 8) {
+            return "Дойти до цели";
+        }
+        return clip(clean, 34);
     }
 
     private String fingerprint(String userId, OnboardingData onboarding) {

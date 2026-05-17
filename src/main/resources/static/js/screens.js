@@ -6,12 +6,12 @@ import {escapeAttr, escapeHtml} from "./utils.js";
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260517-keyboard-plan" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260517-short-hints" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260517-keyboard-plan" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260517-short-hints" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -99,8 +99,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-keyboard-plan"
-        : "/Your%20Plan.svg?v=20260517-keyboard-plan";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-short-hints"
+        : "/Your%20Plan.svg?v=20260517-short-hints";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -118,7 +118,7 @@ function planCorrectionStep(step) {
     const filled = Boolean(draft.trim());
     return `
         <div class="your-plan-scroll is-dimmed">
-            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-keyboard-plan" alt="${escapeAttr(step.title)}">
+            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-short-hints" alt="${escapeAttr(step.title)}">
             ${planOverlay(planForDisplay())}
             <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
         </div>
@@ -139,7 +139,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260517-keyboard-plan" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260517-short-hints" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -275,10 +275,10 @@ function customChoiceDescription(value) {
 
 function chooseGoalArt(index) {
     return [
-        "/Choose%20the%20Goal.svg?v=20260517-keyboard-plan",
-        "/Choose%20the%20Goal-2.svg?v=20260517-keyboard-plan",
-        "/Choose%20the%20Goal-3.svg?v=20260517-keyboard-plan"
-    ][index] || "/Choose%20the%20Goal.svg?v=20260517-keyboard-plan";
+        "/Choose%20the%20Goal.svg?v=20260517-short-hints",
+        "/Choose%20the%20Goal-2.svg?v=20260517-short-hints",
+        "/Choose%20the%20Goal-3.svg?v=20260517-short-hints"
+    ][index] || "/Choose%20the%20Goal.svg?v=20260517-short-hints";
 }
 
 function goalOptions(step) {
@@ -419,23 +419,67 @@ export function goalTextHints(value) {
     const base = String(value || "").trim();
     const goals = Array.isArray(state.suggestions.goals) ? state.suggestions.goals : [];
     if (goals.length && suggestionsMatchCurrentGoal()) {
-        return goals.map((goal) => {
-            const title = goal.title || "Дойти до цели";
-            const description = goal.description || "с понятным планом и спокойным темпом";
-            return `${title}: ${description}`;
-        });
+        return goals.map(shortGoalHint).filter(Boolean);
     }
     if (base.length > 10) {
+        return readyGoalHints(base);
+    }
+    return [
+        "Дойти до цели за 3 месяца",
+        "Собрать понятный план на неделю",
+        "Начать без перегруза"
+    ];
+}
+
+function shortGoalHint(goal) {
+    const title = String(goal && goal.title ? goal.title : "").trim();
+    const duration = String(goal && goal.duration ? goal.duration : "").trim();
+    const text = duration && title && !title.toLowerCase().includes(duration.toLowerCase())
+        ? `${title} за ${duration}`
+        : title;
+    return clipHint(text || "Дойти до цели за 3 месяца", 48);
+}
+
+function readyGoalHints(value) {
+    const text = value.toLowerCase();
+    if (/(мышц|мышеч|накач|зал|трен|сил)/i.test(text)) {
         return [
-            "Уточнить срок, измеримый результат и главный критерий успеха.",
-            "Добавить текущий уровень, ограничения и сколько времени готов уделять в неделю.",
-            "Сделать цель конкретнее: что именно должно измениться через 3 месяца."
+            "Набрать 4-6 кг мышц за 3 месяца",
+            "Тренироваться 3 раза в неделю",
+            "Увеличить силу без перегруза"
+        ];
+    }
+    if (/(похуд|вес|жир|сброс)/i.test(text)) {
+        return [
+            "Сбросить 5 кг за 3 месяца",
+            "Наладить питание без срывов",
+            "Добавить 3 тренировки в неделю"
+        ];
+    }
+    if (/(англ|язык|учить|экзамен)/i.test(text)) {
+        return [
+            "Заниматься языком 30 минут в день",
+            "Подготовиться к экзамену за 3 месяца",
+            "Разговориться без страха"
+        ];
+    }
+    if (/(деньг|доход|бизнес|работ|проект)/i.test(text)) {
+        return [
+            "Запустить проект за 3 месяца",
+            "Увеличить доход по шагам",
+            "Делать 5 рабочих действий в неделю"
         ];
     }
     return [
-        "Хочу выбрать одну важную цель и довести её до результата за 3 месяца без резких рывков.",
-        "Хочу собрать понятный план, который будет учитывать мой график, опыт и реальные ограничения."
+        "Довести цель до результата за 3 месяца",
+        "Делать 3 коротких шага в неделю",
+        "Двигаться без перегруза"
     ];
+}
+
+function clipHint(value, max) {
+    const clean = String(value || "").trim().replace(/\s+/g, " ");
+    return clean.length <= max ? clean : `${clean.slice(0, max - 3).trim()}...`;
 }
 
 function customPlaceholder(step) {
