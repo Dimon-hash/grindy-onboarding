@@ -104,6 +104,11 @@
     box-shadow: none;
 }
 
+.phone-screen.has-custom-drawer .native-custom-panel {
+    bottom: max(118px, calc(env(safe-area-inset-bottom) + 101px + var(--keyboard-inset)));
+    overflow: hidden;
+}
+
 .native-custom-panel > span {
     color: #000;
     font-size: 17px;
@@ -115,7 +120,8 @@
 .native-custom-panel textarea {
     display: block;
     width: 100%;
-    min-height: 146px;
+    height: 146px;
+    min-height: 0;
     padding: 0;
     border: 0;
     outline: 0;
@@ -380,7 +386,7 @@
     }
 
     .native-custom-panel textarea {
-        min-height: 132px;
+        height: 132px;
     }
 
     .native-choice-card {

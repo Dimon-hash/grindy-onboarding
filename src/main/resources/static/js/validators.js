@@ -36,10 +36,19 @@ export function isCustomStepValue(step, value) {
 
 export function effectiveOptions(step) {
     const suggestions = state.suggestions && state.suggestions[step.id];
-    if (Array.isArray(suggestions) && suggestions.length) {
+    if (Array.isArray(suggestions) && suggestions.length && suggestionsMatchCurrentGoal()) {
         return suggestions;
     }
+    const contextual = contextualOptions(step);
+    if (contextual.length) {
+        return contextual;
+    }
     return step.options || [];
+}
+
+function suggestionsMatchCurrentGoal() {
+    const savedGoal = (state.suggestionsKey || "").split("|")[0] || "";
+    return savedGoal === (state.onboarding.goal || "").trim();
 }
 
 function optionTitle(option) {
@@ -47,4 +56,60 @@ function optionTitle(option) {
         return option.title || "";
     }
     return option || "";
+}
+
+function contextualOptions(step) {
+    if (!step || !["experience", "conditions"].includes(step.id)) {
+        return [];
+    }
+    const goal = compactGoal();
+    if (!goal) {
+        return [];
+    }
+    if (step.id === "experience") {
+        return [
+            {
+                title: "Пробовал сам",
+                description: `Уже пытался двигаться к цели «${goal}», но без стабильной системы.`
+            },
+            {
+                title: "Были рывки",
+                description: "Получалось включаться на короткое время, потом темп проседал."
+            },
+            {
+                title: "Нужен контроль",
+                description: "Лучше получается, когда есть план, проверки и понятные шаги."
+            },
+            {
+                title: "Начинаю заново",
+                description: `Хочу спокойно собрать новый подход под цель «${goal}».`
+            }
+        ];
+    }
+    return [
+        {
+            title: "Мало времени",
+            description: `Нужны короткие действия для цели «${goal}», которые влезут в день.`
+        },
+        {
+            title: "Нужна гибкость",
+            description: "План должен учитывать работу, усталость и непредсказуемые дни."
+        },
+        {
+            title: "Есть ограничения",
+            description: "Важно учесть здоровье, график, бюджет или поддержку окружения."
+        },
+        {
+            title: "Без перегруза",
+            description: "Хочу двигаться регулярно, но без резких скачков и чувства вины."
+        }
+    ];
+}
+
+function compactGoal() {
+    const goal = (state.onboarding.goal || "").replace(/\s+/g, " ").trim();
+    if (goal.length < 12) {
+        return "";
+    }
+    return goal.length <= 34 ? goal : `${goal.slice(0, 34).trim()}...`;
 }

@@ -6,12 +6,12 @@ import {escapeAttr, escapeHtml} from "./utils.js";
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260514-no-top-buttons" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260517-clean-top-ai" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260514-no-top-buttons" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260517-clean-top-ai" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -60,10 +60,10 @@ function chooseGoalStep(step) {
     const selectedIndex = Math.max(0, goals.findIndex((goal, index) => goalValue(goal, index) === selected));
     const selectedGoal = goals[selectedIndex] || goals[0];
     const art = [
-        "/Choose%20the%20Goal.svg?v=20260514-no-top-buttons",
-        "/Choose%20the%20Goal-2.svg?v=20260514-no-top-buttons",
-        "/Choose%20the%20Goal-3.svg?v=20260514-no-top-buttons"
-    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260514-no-top-buttons";
+        "/Choose%20the%20Goal.svg?v=20260517-clean-top-ai",
+        "/Choose%20the%20Goal-2.svg?v=20260517-clean-top-ai",
+        "/Choose%20the%20Goal-3.svg?v=20260517-clean-top-ai"
+    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260517-clean-top-ai";
 
     return `
         <div class="choose-goal-stage ${state.goalCardFlip ? "is-flipping" : ""}">
@@ -102,8 +102,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260514-no-top-buttons"
-        : "/Your%20Plan.svg?v=20260514-no-top-buttons";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-clean-top-ai"
+        : "/Your%20Plan.svg?v=20260517-clean-top-ai";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -120,8 +120,8 @@ function planCorrectionStep(step) {
     const draft = state.planDraft || "";
     const filled = Boolean(draft.trim());
     const art = filled
-        ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260514-no-top-buttons"
-        : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260514-no-top-buttons";
+        ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260517-clean-top-ai"
+        : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260517-clean-top-ai";
     return `
         <img class="screen-art your-plan-edit-art" src="${art}" alt="${escapeAttr(step.title)}">
         <button id="back" class="your-plan-back-hit-area" type="button" aria-label="Назад"></button>
@@ -137,7 +137,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260514-no-top-buttons" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260517-clean-top-ai" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -173,7 +173,7 @@ function nativeChoiceStep(step) {
         ${drawerOpen ? `
             <section class="native-choice-list native-custom-panel ${draft.trim() ? "has-value" : ""}">
                 <span>Свой вариант</span>
-                <textarea id="custom-choice-input" maxlength="220" enterkeyhint="done" placeholder="Опиши свой опыт или условия">${escapeHtml(draft)}</textarea>
+                <textarea id="custom-choice-input" maxlength="220" enterkeyhint="done" placeholder="${escapeAttr(customPlaceholder(step))}">${escapeHtml(draft)}</textarea>
                 ${textSuggestions("native-custom", choiceTextHints(step), "custom-choice-input")}
             </section>
         ` : `
@@ -227,7 +227,7 @@ function choiceOptions(step) {
 
 function goalOptions(step) {
     const suggestions = state.suggestions.goals;
-    if (Array.isArray(suggestions) && suggestions.length) {
+    if (Array.isArray(suggestions) && suggestions.length && suggestionsMatchCurrentGoal()) {
         return suggestions.slice(0, 3);
     }
     return step.options.map((option, index) => ({
@@ -285,7 +285,7 @@ function planOverlay(plan) {
 }
 
 function planForDisplay() {
-    if (state.suggestions.plan && Array.isArray(state.suggestions.plan.milestones)) {
+    if (state.suggestions.plan && Array.isArray(state.suggestions.plan.milestones) && suggestionsMatchCurrentGoal()) {
         return state.suggestions.plan;
     }
     const goal = (state.onboarding.goal || "цели").trim();
@@ -303,11 +303,11 @@ function planForDisplay() {
 
 function experienceDrawerStep(step, draft) {
     return `
-        <img class="screen-art experience-drawer-art" src="/experience-drawer-opened.svg?v=20260514-no-top-buttons" alt="${escapeAttr(step.title)}">
+        <img class="screen-art experience-drawer-art" src="/experience-drawer-opened.svg?v=20260517-clean-top-ai" alt="${escapeAttr(step.title)}">
         <button id="back" class="experience-drawer-back-hit-area" type="button" aria-label="Назад"></button>
         <button id="custom-drawer-close" class="experience-drawer-close-hit-area" type="button" aria-label="Закрыть свой вариант"></button>
         <label class="experience-drawer-input-layer ${draft.trim() ? "has-value" : ""}">
-            <textarea id="custom-choice-input" maxlength="220" enterkeyhint="done" aria-label="Свой вариант">${escapeHtml(draft)}</textarea>
+            <textarea id="custom-choice-input" maxlength="220" enterkeyhint="done" aria-label="Свой вариант" placeholder="${escapeAttr(customPlaceholder(step))}">${escapeHtml(draft)}</textarea>
         </label>
         ${textSuggestions("experience-drawer", choiceTextHints(step), "custom-choice-input")}
         <button id="next" class="experience-drawer-next-button" type="button" ${canContinue(step) ? "" : "disabled"}>${escapeHtml(step.button)}</button>
@@ -330,10 +330,10 @@ function textSuggestions(kind, suggestions, targetId) {
     `;
 }
 
-function goalTextHints(value) {
+export function goalTextHints(value) {
     const base = String(value || "").trim();
     const goals = Array.isArray(state.suggestions.goals) ? state.suggestions.goals : [];
-    if (goals.length) {
+    if (goals.length && suggestionsMatchCurrentGoal()) {
         return goals.map((goal) => {
             const title = goal.title || "Дойти до цели";
             const description = goal.description || "с понятным планом и спокойным темпом";
@@ -350,6 +350,21 @@ function goalTextHints(value) {
         "Хочу выбрать одну важную цель и довести её до результата за 3 месяца без резких рывков.",
         "Хочу собрать понятный план, который будет учитывать мой график, опыт и реальные ограничения."
     ];
+}
+
+function customPlaceholder(step) {
+    if (step.id === "experience") {
+        return "Что уже пробовал для этой цели?";
+    }
+    if (step.id === "conditions") {
+        return "Что важно учесть: время, график, ограничения?";
+    }
+    return "Опиши свой вариант";
+}
+
+function suggestionsMatchCurrentGoal() {
+    const savedGoal = (state.suggestionsKey || "").split("|")[0] || "";
+    return savedGoal === (state.onboarding.goal || "").trim();
 }
 
 function choiceTextHints(step) {

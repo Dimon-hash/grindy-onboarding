@@ -3,7 +3,7 @@ import {steps} from "./js/steps.js";
 import {nodes, state} from "./js/state.js";
 import {ApiError, authenticate, loadCurrentUser, loadOnboardingSuggestions, saveOnboarding} from "./js/api.js";
 import {initTelegram, syncTheme, telegram} from "./js/telegram.js";
-import {renderStep} from "./js/screens.js";
+import {goalTextHints, renderStep} from "./js/screens.js";
 import {canContinue, choiceOptionValue, isCustomStepValue} from "./js/validators.js";
 import {wait} from "./js/utils.js";
 
@@ -210,6 +210,7 @@ function bindGoalInput(step) {
         }
         document.getElementById("counter").textContent = `${state.onboarding.goal.length} / ${step.limit}`;
         next.disabled = !canContinue(step);
+        updateGoalTextSuggestions(state.onboarding.goal);
         autosave();
         queueSuggestionsRefresh();
     });
@@ -354,8 +355,8 @@ function bindPlanCorrectionInput() {
         }
         if (art) {
             art.src = filled
-                ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260514-no-top-buttons"
-                : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260514-no-top-buttons";
+                ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260517-clean-top-ai"
+                : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260517-clean-top-ai";
         }
     });
 }
@@ -373,6 +374,32 @@ function bindTextSuggestions() {
             input.focus({preventScroll: true});
         });
     });
+}
+
+function updateGoalTextSuggestions(value) {
+    const container = document.querySelector(".ai-text-suggestions-goal");
+    if (!container) {
+        return;
+    }
+    container.replaceChildren(...goalTextHints(value).slice(0, 3).map((hint) => {
+        const button = document.createElement("button");
+        button.className = "ai-text-suggestion";
+        button.type = "button";
+        button.dataset.target = "goal-input";
+        button.dataset.value = hint;
+        button.textContent = hint;
+        button.addEventListener("click", () => {
+            const input = document.getElementById("goal-input");
+            if (!input) {
+                return;
+            }
+            const maxLength = Number(input.getAttribute("maxlength")) || hint.length;
+            input.value = hint.slice(0, maxLength);
+            input.dispatchEvent(new Event("input", {bubbles: true}));
+            input.focus({preventScroll: true});
+        });
+        return button;
+    }));
 }
 
 function bindCustomOpen(step) {
@@ -563,6 +590,10 @@ async function refreshSuggestions({renderAfter = true} = {}) {
         };
         state.suggestionsKey = requestKey;
         applySuggestionDefaults();
+        const currentStep = steps[state.onboardingStep];
+        if (currentStep && currentStep.id === "goal") {
+            updateGoalTextSuggestions(state.onboarding.goal);
+        }
     })();
     try {
         await state.suggestionsRequest;
@@ -581,7 +612,7 @@ function applySuggestionDefaults() {
     ["experience", "conditions"].forEach((id) => {
         const step = steps.find((item) => item.id === id);
         const current = state.onboarding[id] || "";
-        if (step && shouldReplaceGeneratedChoice(current)) {
+        if (step && shouldReplaceGeneratedChoice(step, current, id)) {
             state.onboarding[id] = choiceOptionValue(step, 0);
         }
     });
@@ -590,8 +621,14 @@ function applySuggestionDefaults() {
     }
 }
 
-function shouldReplaceGeneratedChoice(value) {
-    return !value || /^Вариант\s+\d-\d$/.test(value);
+function shouldReplaceGeneratedChoice(step, value, id) {
+    if (!value || /^Вариант\s+\d-\d$/.test(value)) {
+        return true;
+    }
+    if ((state.customDrafts[id] || "").trim()) {
+        return false;
+    }
+    return /-\d$/.test(value) && isCustomStepValue(step, value);
 }
 
 function suggestionsKey() {

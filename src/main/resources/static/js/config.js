@@ -1,5 +1,5 @@
 export const CUSTOM_VALUE = "__custom__";
-export const APP_VERSION = "20260517-reset-onboarding";
+export const APP_VERSION = "20260517-clean-top-ai";
 
 export function resetStoredUiVersion() {
     if (localStorage.getItem("grindy.uiVersion") === APP_VERSION) {
