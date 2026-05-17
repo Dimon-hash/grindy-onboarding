@@ -410,7 +410,17 @@ function updateGoalTextSuggestions(value) {
     if (!container) {
         return;
     }
-    container.replaceChildren(...goalTextHints(value).slice(0, 3).map((hint) => {
+    const loading = state.suggestionsLoading && (state.onboarding.goal || "").trim().length >= 24;
+    container.classList.toggle("is-loading", loading);
+    const children = [];
+    if (loading) {
+        const loader = document.createElement("span");
+        loader.className = "ai-suggestions-loader";
+        loader.setAttribute("aria-live", "polite");
+        loader.innerHTML = `<span class="ai-suggestions-spinner" aria-hidden="true"></span>Генерируем варианты`;
+        children.push(loader);
+    }
+    children.push(...goalTextHints(value).slice(0, 3).map((hint) => {
         const button = document.createElement("button");
         button.className = "ai-text-suggestion";
         button.type = "button";
@@ -426,6 +436,7 @@ function updateGoalTextSuggestions(value) {
         });
         return button;
     }));
+    container.replaceChildren(...children);
 }
 
 function appendSuggestionToInput(input, suggestion) {
@@ -626,6 +637,9 @@ async function refreshSuggestions({renderAfter = true} = {}) {
         }
     }
     state.suggestionsLoading = true;
+    if ((steps[state.onboardingStep] || {}).id === "goal") {
+        updateGoalTextSuggestions(state.onboarding.goal);
+    }
     state.suggestionsRequest = (async () => {
         const suggestions = await loadOnboardingSuggestions();
         if (requestKey !== suggestionsKey()) {
@@ -651,6 +665,9 @@ async function refreshSuggestions({renderAfter = true} = {}) {
     } finally {
         state.suggestionsLoading = false;
         state.suggestionsRequest = null;
+        if ((steps[state.onboardingStep] || {}).id === "goal") {
+            updateGoalTextSuggestions(state.onboarding.goal);
+        }
     }
     if (renderAfter) {
         render();
@@ -764,7 +781,17 @@ function setAppHeight() {
 function setKeyboardOpen(open) {
     document.body.classList.toggle("keyboard-open", open);
     window.clearTimeout(setKeyboardOpen.timer);
-    updateKeyboardInset(open);
+    if (!open) {
+        document.documentElement.style.setProperty("--keyboard-inset", "0px");
+        keepViewportPinned();
+        setKeyboardOpen.timer = window.setTimeout(() => {
+            setAppHeight();
+            document.documentElement.style.setProperty("--keyboard-inset", "0px");
+            keepViewportPinned();
+        }, 80);
+        return;
+    }
+    updateKeyboardInset(true);
     if (open) {
         keepViewportPinned();
         setKeyboardOpen.timer = window.setTimeout(() => {

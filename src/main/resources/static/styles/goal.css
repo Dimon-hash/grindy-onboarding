@@ -35,7 +35,7 @@
 .goal-input-layer textarea {
     display: block;
     width: 100%;
-    height: calc(100% - 108px);
+    height: calc(100% - 248px);
     padding: 0;
     border: 0;
     outline: 0;
@@ -68,7 +68,7 @@
 .goal-counter {
     position: absolute;
     left: 50%;
-    bottom: 52px;
+    bottom: 182px;
     z-index: 8;
     width: 86px;
     height: 20px;
@@ -86,17 +86,32 @@
     position: absolute;
     left: 24px;
     right: 24px;
-    bottom: max(126px, calc(env(safe-area-inset-bottom) + 109px + var(--keyboard-inset)));
+    bottom: max(107px, calc(env(safe-area-inset-bottom) + 90px + var(--keyboard-inset)));
     z-index: 9;
+    display: grid;
+    justify-content: start;
+    align-content: end;
+    gap: 6px;
+    overflow: visible;
+    padding: 0;
     transition: bottom 180ms ease;
 }
 
 .ai-text-suggestions-goal .ai-text-suggestion {
-    max-width: 190px;
+    width: fit-content;
+    max-width: min(284px, 100%);
+    min-height: 28px;
+    padding: 6px 10px;
+    font-size: 12px;
+    line-height: 125%;
 }
 
 .keyboard-open .ai-text-suggestions-goal {
-    bottom: max(30px, calc(env(safe-area-inset-bottom) + 18px + var(--keyboard-inset)));
+    bottom: max(18px, calc(env(safe-area-inset-bottom) + 12px + var(--keyboard-inset)));
+}
+
+.keyboard-open .goal-counter {
+    bottom: 106px;
 }
 
 .goal-input-layer:not(.has-value):not(.is-focused) .goal-counter {
@@ -120,11 +135,15 @@
     text-align: center;
     letter-spacing: -0.02em;
     cursor: pointer;
-    transition: bottom 180ms ease;
+    transition: bottom 180ms ease, opacity 120ms ease;
 }
 
 .keyboard-open .goal-input-layer {
     height: min(330px, calc(var(--app-height) - var(--keyboard-inset) - 286px));
+}
+
+.keyboard-open .goal-input-layer textarea {
+    height: calc(100% - 150px);
 }
 
 .keyboard-open .goal-next-button {

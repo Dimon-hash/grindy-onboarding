@@ -6,7 +6,7 @@ export function canContinue(step) {
         return true;
     }
     if (step.type === "textarea") {
-        return (state.onboarding.goal || "").trim().length >= step.minLength;
+        return (state.onboarding.goal || "").length >= step.minLength;
     }
     if (step.id === "experience") {
         const experience = (state.onboarding.experience || "").trim();

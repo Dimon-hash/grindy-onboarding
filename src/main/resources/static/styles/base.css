@@ -74,6 +74,36 @@ button {
     cursor: pointer;
 }
 
+.ai-suggestions-loader {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 28px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(0, 86, 249, 0.06);
+    color: rgba(0, 86, 249, 0.72);
+    font-size: 12px;
+    line-height: 120%;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ai-suggestions-spinner {
+    width: 13px;
+    height: 13px;
+    border: 2px solid rgba(0, 86, 249, 0.2);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: ai-suggestions-spin 760ms linear infinite;
+}
+
+@keyframes ai-suggestions-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .app-shell,
 .workspace,
 .onboarding-wizard {
