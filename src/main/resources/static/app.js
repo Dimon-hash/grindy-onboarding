@@ -4,7 +4,7 @@ import {nodes, state} from "./js/state.js";
 import {ApiError, authenticate, loadCurrentUser, loadOnboardingSuggestions, saveOnboarding} from "./js/api.js";
 import {initTelegram, syncTheme, telegram} from "./js/telegram.js";
 import {goalTextHints, renderStep} from "./js/screens.js";
-import {canContinue, choiceOptionValue, isCustomStepValue} from "./js/validators.js";
+import {canContinue, choiceOptionValue, isCustomStepValue, isSavedChoiceValue} from "./js/validators.js";
 import {wait} from "./js/utils.js";
 
 initTelegram();
@@ -70,7 +70,7 @@ function loadFromUser() {
     ["experience", "conditions"].forEach((key) => {
         const step = steps.find((item) => item.id === key);
         const value = state.onboarding[key];
-        if (step && isCustomStepValue(step, value) && value !== CUSTOM_VALUE) {
+        if (step && isCustomStepValue(step, value) && !isSavedChoiceValue(value) && value !== CUSTOM_VALUE) {
             state.customDrafts[key] = value;
         }
     });
@@ -444,10 +444,10 @@ function bindCustomOpen(step) {
         blurActiveControl();
         state.customDrawerStepId = step.id;
         const current = state.onboarding[step.id];
-        if (!isCustomStepValue(step, current)) {
+        if (!isCustomStepValue(step, current) || isSavedChoiceValue(current)) {
             state.customPreviousValues[step.id] = current;
         }
-        state.customDrafts[step.id] = isCustomStepValue(step, current) && current !== CUSTOM_VALUE
+        state.customDrafts[step.id] = isCustomStepValue(step, current) && !isSavedChoiceValue(current) && current !== CUSTOM_VALUE
             ? current
             : state.customDrafts[step.id] || "";
         state.onboarding[step.id] = state.customDrafts[step.id] || CUSTOM_VALUE;
@@ -661,7 +661,7 @@ function shouldReplaceGeneratedChoice(step, value, id) {
     if ((state.customDrafts[id] || "").trim()) {
         return false;
     }
-    return /-\d$/.test(value) && isCustomStepValue(step, value);
+    return isSavedChoiceValue(value) && isCustomStepValue(step, value);
 }
 
 function suggestionsKey() {

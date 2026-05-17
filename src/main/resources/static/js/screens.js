@@ -1,17 +1,17 @@
 import {CUSTOM_VALUE} from "./config.js";
 import {state} from "./state.js";
-import {canContinue, choiceOptionValue, effectiveOptions, isCustomStepValue} from "./validators.js";
+import {canContinue, choiceOptionValue, choiceTitleFromValue, effectiveOptions, isCustomStepValue, isSavedChoiceValue} from "./validators.js";
 import {escapeAttr, escapeHtml} from "./utils.js";
 
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260517-card-book" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260517-saved-choice" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260517-card-book" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260517-saved-choice" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -99,8 +99,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-card-book"
-        : "/Your%20Plan.svg?v=20260517-card-book";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-saved-choice"
+        : "/Your%20Plan.svg?v=20260517-saved-choice";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -118,7 +118,7 @@ function planCorrectionStep(step) {
     const filled = Boolean(draft.trim());
     return `
         <div class="your-plan-scroll is-dimmed">
-            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-card-book" alt="${escapeAttr(step.title)}">
+            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-saved-choice" alt="${escapeAttr(step.title)}">
             ${planOverlay(planForDisplay())}
             <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
         </div>
@@ -139,7 +139,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260517-card-book" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260517-saved-choice" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -155,14 +155,24 @@ function nativeChoiceStep(step) {
         state.onboarding[step.id] = choiceOptionValue(step, 0);
     }
     const selected = state.onboarding[step.id] || "";
-    const draft = state.customDrafts[step.id] || (isCustomStepValue(step, selected) && selected !== CUSTOM_VALUE ? selected : "");
     const drawerOpen = state.customDrawerStepId === step.id;
-    const selectedIsCustom = isCustomStepValue(step, selected);
     const baseOptions = choiceOptions(step).map((option, index) => ({
         ...option,
         value: choiceOptionValue(step, index),
         custom: false
     }));
+    const selectedIsSavedChoice = isSavedChoiceValue(selected);
+    const selectedMatchesBase = baseOptions.some((option) => option.value === selected);
+    const selectedIsCustom = isCustomStepValue(step, selected) && !selectedIsSavedChoice;
+    const draft = state.customDrafts[step.id] || (selectedIsCustom && selected !== CUSTOM_VALUE ? selected : "");
+    const savedSelectedOption = selectedIsSavedChoice && !selectedMatchesBase
+        ? {
+            title: choiceTitleFromValue(selected) || "Подходящий вариант",
+            description: "Подходит под твою цель и текущие условия.",
+            value: selected,
+            custom: false
+        }
+        : null;
     const visibleOptions = selectedIsCustom && selected !== CUSTOM_VALUE
         ? [
             {
@@ -173,6 +183,8 @@ function nativeChoiceStep(step) {
             },
             ...baseOptions.slice(1)
         ]
+        : savedSelectedOption
+            ? [savedSelectedOption, ...baseOptions.slice(1)]
         : baseOptions;
 
     return `
@@ -241,10 +253,10 @@ function choiceOptions(step) {
 
 function chooseGoalArt(index) {
     return [
-        "/Choose%20the%20Goal.svg?v=20260517-card-book",
-        "/Choose%20the%20Goal-2.svg?v=20260517-card-book",
-        "/Choose%20the%20Goal-3.svg?v=20260517-card-book"
-    ][index] || "/Choose%20the%20Goal.svg?v=20260517-card-book";
+        "/Choose%20the%20Goal.svg?v=20260517-saved-choice",
+        "/Choose%20the%20Goal-2.svg?v=20260517-saved-choice",
+        "/Choose%20the%20Goal-3.svg?v=20260517-saved-choice"
+    ][index] || "/Choose%20the%20Goal.svg?v=20260517-saved-choice";
 }
 
 function goalOptions(step) {

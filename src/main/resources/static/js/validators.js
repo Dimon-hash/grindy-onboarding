@@ -34,6 +34,14 @@ export function isCustomStepValue(step, value) {
     return !effectiveOptions(step).some((option, index) => value === `${optionTitle(option)}-${index}`);
 }
 
+export function isSavedChoiceValue(value) {
+    return /^.+-\d+$/.test(String(value || "").trim());
+}
+
+export function choiceTitleFromValue(value) {
+    return String(value || "").trim().replace(/-\d+$/, "").trim();
+}
+
 export function effectiveOptions(step) {
     const suggestions = state.suggestions && state.suggestions[step.id];
     if (Array.isArray(suggestions) && suggestions.length && suggestionsMatchCurrentGoal()) {
