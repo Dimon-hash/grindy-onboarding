@@ -243,9 +243,9 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 326px;
+    top: 382px;
     z-index: 2;
-    min-height: 560px;
+    min-height: 640px;
     background: #fff;
     pointer-events: none;
 }
@@ -261,7 +261,7 @@
 .your-plan-scroll.is-dimmed::before {
     content: "";
     position: sticky;
-    top: 0;
+    top: 54px;
     z-index: 20;
     display: block;
     height: var(--app-height);
@@ -291,7 +291,7 @@
 .your-plan-live-content {
     position: relative;
     z-index: 4;
-    margin: 338px 24px 190px;
+    margin: 394px 24px 190px;
     padding: 0 0 20px;
     background: #fff;
     color: #000;
@@ -319,7 +319,7 @@
     grid-template-columns: 30px minmax(0, 1fr);
     gap: 12px;
     min-height: 0;
-    padding: 14px 0;
+    padding: 14px 0 16px;
     border-bottom: 1px solid rgba(9, 7, 35, 0.06);
     text-align: left;
 }
@@ -369,7 +369,7 @@
 .your-plan-live-point h2 {
     margin: 0 0 8px;
     color: #000;
-    font-size: 17px;
+    font-size: 18px;
     line-height: 120%;
     font-weight: 800;
     letter-spacing: 0;
@@ -386,10 +386,39 @@
     overflow-wrap: anywhere;
 }
 
+.your-plan-live-details {
+    display: grid;
+    gap: 6px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.your-plan-live-details li {
+    position: relative;
+    padding-left: 14px;
+    color: rgba(0, 0, 0, 0.52);
+    font-size: 13px;
+    line-height: 130%;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+.your-plan-live-details li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--blue);
+}
+
 .your-plan-back-hit-area {
     position: absolute;
     left: 54px;
-    top: 121px;
+    top: 175px;
     z-index: 8;
     width: 34px;
     height: 34px;
@@ -446,7 +475,7 @@
     position: absolute;
     left: 16px;
     right: 16px;
-    bottom: max(20px, calc(env(safe-area-inset-bottom) + 16px + var(--keyboard-inset)));
+    bottom: max(18px, calc(env(safe-area-inset-bottom) + 16px + var(--keyboard-inset)));
     z-index: 21;
     display: grid;
     gap: 12px;
@@ -504,7 +533,7 @@
 .plan-correction-input-layer {
     display: block;
     width: 100%;
-    height: 138px;
+    height: 126px;
     padding: 16px;
     border-radius: 12px;
     background: #f6f6f7;

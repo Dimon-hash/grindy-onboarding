@@ -97,36 +97,79 @@
 }
 
 .native-custom-panel {
-    min-height: 262px;
-    padding: 18px 16px;
-    border-radius: 12px;
-    background: #f6f6f7;
-    box-shadow: none;
+    display: grid;
+    gap: 12px;
+    min-height: 0;
+    padding: 20px 16px 16px;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 18px 60px rgba(9, 7, 35, 0.18);
 }
 
 .phone-screen.has-custom-drawer .native-custom-panel {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    top: auto;
     bottom: max(118px, calc(env(safe-area-inset-bottom) + 101px + var(--keyboard-inset)));
     overflow: hidden;
+    z-index: 22;
+    transition: bottom 180ms ease;
 }
 
 .native-custom-panel > span {
+    padding-right: 40px;
     color: #000;
-    font-size: 17px;
+    font-size: 22px;
     line-height: 120%;
     font-weight: 700;
     letter-spacing: 0;
 }
 
+.native-custom-close-hit-area {
+    position: absolute;
+    right: 13px;
+    top: 12px;
+    z-index: 2;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.native-custom-close-hit-area::before,
+.native-custom-close-hit-area::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 22px;
+    height: 2px;
+    border-radius: 999px;
+    background: rgba(9, 7, 35, 0.22);
+}
+
+.native-custom-close-hit-area::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.native-custom-close-hit-area::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
 .native-custom-panel textarea {
     display: block;
     width: 100%;
-    height: 146px;
+    height: 128px;
     min-height: 0;
-    padding: 0;
+    padding: 16px;
     border: 0;
     outline: 0;
     resize: none;
-    background: transparent;
+    border-radius: 12px;
+    background: #f6f6f7;
     color: var(--body);
     caret-color: var(--blue);
     font-size: 16px;
@@ -135,7 +178,9 @@
 }
 
 .native-custom-panel .ai-text-suggestions {
-    margin-top: 10px;
+    width: 100%;
+    min-width: 0;
+    margin-top: -2px;
 }
 
 .native-custom-panel textarea::placeholder {
@@ -214,6 +259,10 @@
     border-radius: 999px;
     background: #fff;
     transform: translate(-50%, -50%);
+}
+
+.native-choice-card.is-custom-selected {
+    background: #f1f6ff;
 }
 
 .native-choice-footer {

@@ -6,12 +6,12 @@ import {escapeAttr, escapeHtml} from "./utils.js";
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260517-polished-ui" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260517-plan-detail" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260517-polished-ui" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260517-plan-detail" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -60,10 +60,10 @@ function chooseGoalStep(step) {
     const selectedIndex = Math.max(0, goals.findIndex((goal, index) => goalValue(goal, index) === selected));
     const selectedGoal = goals[selectedIndex] || goals[0];
     const art = [
-        "/Choose%20the%20Goal.svg?v=20260517-polished-ui",
-        "/Choose%20the%20Goal-2.svg?v=20260517-polished-ui",
-        "/Choose%20the%20Goal-3.svg?v=20260517-polished-ui"
-    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260517-polished-ui";
+        "/Choose%20the%20Goal.svg?v=20260517-plan-detail",
+        "/Choose%20the%20Goal-2.svg?v=20260517-plan-detail",
+        "/Choose%20the%20Goal-3.svg?v=20260517-plan-detail"
+    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260517-plan-detail";
 
     return `
         <div class="choose-goal-stage ${state.goalCardFlip ? "is-flipping" : ""}">
@@ -102,8 +102,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-polished-ui"
-        : "/Your%20Plan.svg?v=20260517-polished-ui";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-plan-detail"
+        : "/Your%20Plan.svg?v=20260517-plan-detail";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -121,7 +121,7 @@ function planCorrectionStep(step) {
     const filled = Boolean(draft.trim());
     return `
         <div class="your-plan-scroll is-dimmed">
-            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-polished-ui" alt="${escapeAttr(step.title)}">
+            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-plan-detail" alt="${escapeAttr(step.title)}">
             ${planOverlay(planForDisplay())}
             <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
         </div>
@@ -142,7 +142,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260517-polished-ui" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260517-plan-detail" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -161,10 +161,22 @@ function nativeChoiceStep(step) {
     const draft = state.customDrafts[step.id] || (isCustomStepValue(step, selected) && selected !== CUSTOM_VALUE ? selected : "");
     const drawerOpen = state.customDrawerStepId === step.id;
     const selectedIsCustom = isCustomStepValue(step, selected);
-
-    if (drawerOpen && step.id === "experience") {
-        return experienceDrawerStep(step, draft);
-    }
+    const baseOptions = choiceOptions(step).map((option, index) => ({
+        ...option,
+        value: choiceOptionValue(step, index),
+        custom: false
+    }));
+    const visibleOptions = selectedIsCustom && selected !== CUSTOM_VALUE
+        ? [
+            {
+                title: "Свой вариант",
+                description: selected,
+                value: selected,
+                custom: true
+            },
+            ...baseOptions
+        ]
+        : baseOptions;
 
     return `
         <header class="native-question-header">
@@ -177,20 +189,20 @@ function nativeChoiceStep(step) {
         </section>
         ${drawerOpen ? `
             <section class="native-choice-list native-custom-panel ${draft.trim() ? "has-value" : ""}">
-                <span>Свой вариант</span>
+                <button id="custom-drawer-close" class="native-custom-close-hit-area" type="button" aria-label="Закрыть свой вариант"></button>
+                <span>${escapeHtml(customDrawerTitle(step))}</span>
                 <textarea id="custom-choice-input" maxlength="220" enterkeyhint="done" placeholder="${escapeAttr(customPlaceholder(step))}">${escapeHtml(draft)}</textarea>
                 ${textSuggestions("native-custom", choiceTextHints(step), "custom-choice-input")}
             </section>
         ` : `
             <section class="native-choice-list" aria-label="${escapeAttr(step.title)}">
-                ${choiceOptions(step).map((option, index) => {
-                    const value = choiceOptionValue(step, index);
-                    const isSelected = selected === value;
+                ${visibleOptions.map((option) => {
+                    const isSelected = selected === option.value;
                     return `
                         <button
-                            class="native-choice-card ${isSelected ? "is-selected" : ""}"
+                            class="native-choice-card ${isSelected ? "is-selected" : ""} ${option.custom ? "is-custom-selected" : ""}"
                             type="button"
-                            data-value="${escapeAttr(value)}"
+                            data-value="${escapeAttr(option.value)}"
                             aria-pressed="${isSelected ? "true" : "false"}">
                             <span class="native-choice-text">
                                 <strong>${escapeHtml(option.title)}</strong>
@@ -271,16 +283,20 @@ function planOverlay(plan) {
     if (!plan || !Array.isArray(plan.milestones)) {
         return "";
     }
+    const milestones = plan.milestones.slice(0, 8);
     return `
         <section class="your-plan-live-content">
             <p>${escapeHtml(plan.summary || "План собран под твою цель и текущие условия.")}</p>
             <div class="your-plan-live-timeline">
-                ${plan.milestones.slice(0, 5).map((milestone, index) => `
+                ${milestones.map((milestone, index) => `
                     <article class="your-plan-live-point ${index === 0 ? "is-current" : ""}">
                         <span class="your-plan-live-dot" aria-hidden="true"></span>
                         <div>
                             <h2>${escapeHtml(milestone.title || "Этап")}</h2>
                             <p>${escapeHtml(milestone.description || "Понятный следующий шаг")}</p>
+                            <ul class="your-plan-live-details">
+                                ${milestoneDetails(milestone, index).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+                            </ul>
                         </div>
                     </article>
                 `).join("")}
@@ -299,24 +315,13 @@ function planForDisplay() {
         milestones: [
             {title: "Старт", description: "Зафиксируй текущую точку и выбери один простой шаг на сегодня."},
             {title: "Первая неделя", description: "Собери минимальный ритм: короткие действия, отметки прогресса и понятные напоминания."},
+            {title: "Неделя 2", description: "Добавь повторяемость: выбери дни, время и простой способ не пропускать важные действия."},
             {title: "Первый месяц", description: "Убери то, что мешает чаще всего, и закрепи действия в обычном графике."},
-            {title: "Контроль", description: "Раз в неделю смотри, что сработало, и корректируй план без чувства вины."},
+            {title: "Проверка прогресса", description: "Раз в неделю смотри, что сработало, и корректируй план без чувства вины."},
+            {title: "Поддержка", description: "Подключи людей, напоминания или среду, чтобы не тащить цель только на мотивации."},
             {title: "Закрепление", description: "Усиль результат и подготовь следующий уровень, когда базовый ритм станет устойчивым."}
         ]
     };
-}
-
-function experienceDrawerStep(step, draft) {
-    return `
-        <img class="screen-art experience-drawer-art" src="/experience-drawer-opened.svg?v=20260517-polished-ui" alt="${escapeAttr(step.title)}">
-        <button id="back" class="experience-drawer-back-hit-area" type="button" aria-label="Назад"></button>
-        <button id="custom-drawer-close" class="experience-drawer-close-hit-area" type="button" aria-label="Закрыть свой вариант"></button>
-        <label class="experience-drawer-input-layer ${draft.trim() ? "has-value" : ""}">
-            <textarea id="custom-choice-input" maxlength="220" enterkeyhint="done" aria-label="Свой вариант" placeholder="${escapeAttr(customPlaceholder(step))}">${escapeHtml(draft)}</textarea>
-        </label>
-        ${textSuggestions("experience-drawer", choiceTextHints(step), "custom-choice-input")}
-        <button id="next" class="experience-drawer-next-button" type="button" ${canContinue(step) ? "" : "disabled"}>${escapeHtml(step.button)}</button>
-    `;
 }
 
 function textSuggestions(kind, suggestions, targetId) {
@@ -367,6 +372,16 @@ function customPlaceholder(step) {
     return "Опиши свой вариант";
 }
 
+function customDrawerTitle(step) {
+    if (step.id === "experience") {
+        return "Напишите свой опыт";
+    }
+    if (step.id === "conditions") {
+        return "Напишите свои условия";
+    }
+    return "Напишите свой вариант";
+}
+
 function suggestionsMatchCurrentGoal() {
     const savedGoal = (state.suggestionsKey || "").split("|")[0] || "";
     return savedGoal === (state.onboarding.goal || "").trim();
@@ -384,6 +399,44 @@ function planCorrectionHints() {
         "Сделай план мягче и реалистичнее на загруженные дни.",
         `Добавь больше конкретики про ${milestoneTitle}.`,
         "Разбей действия на короткие шаги по 15-20 минут."
+    ];
+}
+
+function milestoneDetails(milestone, index) {
+    const title = (milestone.title || "").toLowerCase();
+    if (index === 0 || title.includes("старт") || title.includes("здесь")) {
+        return [
+            "Запиши исходное состояние и главный критерий успеха.",
+            "Выбери действие на сегодня, которое можно сделать за 10-15 минут."
+        ];
+    }
+    if (title.includes("недел") || title.includes("перв")) {
+        return [
+            "Поставь 3-4 коротких действия в календарь.",
+            "Отмечай выполнение каждый день, даже если сделал минимум."
+        ];
+    }
+    if (title.includes("поддерж")) {
+        return [
+            "Предупреди близких или коллег, что тебе важен новый ритм.",
+            "Подготовь среду заранее: убери лишние препятствия и добавь напоминания."
+        ];
+    }
+    if (title.includes("провер") || title.includes("контрол") || title.includes("прогресс")) {
+        return [
+            "Раз в неделю сравни план и реальность без самокритики.",
+            "Оставь то, что работает, а сложные действия упрости."
+        ];
+    }
+    if (title.includes("закреп")) {
+        return [
+            "Сохрани привычки, которые дали лучший результат.",
+            "Выбери следующий уровень только после стабильной недели."
+        ];
+    }
+    return [
+        "Сделай шаг маленьким, измеримым и понятным.",
+        "Если день сорвался, вернись к минимальному варианту завтра."
     ];
 }
 

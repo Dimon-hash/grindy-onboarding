@@ -28,7 +28,7 @@ import java.util.Map;
 public final class AiSuggestionService {
     private static final String DEFAULT_BASE_URL = "https://api.aitunnel.ru/v1";
     private static final String DEFAULT_MODEL = "gpt-4o-mini";
-    private static final String PROMPT_VERSION = "20260517-polished-ui";
+    private static final String PROMPT_VERSION = "20260517-plan-detail";
 
     private final Json json;
     private final UserStore userStore;
@@ -108,7 +108,7 @@ public final class AiSuggestionService {
                   "experience":[{"title":"...","description":"..."} x4],
                   "conditions":[{"title":"...","description":"..."} x4],
                   "goals":[{"duration":"...","title":"...","description":"...","bullets":["..."],"accent":"blue|orange|green"} x3],
-                  "plan":{"title":"...","summary":"...","milestones":[{"title":"...","description":"..."} x4]},
+                  "plan":{"title":"...","summary":"...","milestones":[{"title":"...","description":"..."} x6-8]},
                   "source":"ai"
                 }
                 Все варианты должны быть персональными под цель пользователя и отличаться между собой.
@@ -124,7 +124,7 @@ public final class AiSuggestionService {
 
                 Сгенерируй варианты так, чтобы они выглядели как реальные ответы в онбординге, а не как общая статья.
                 Заголовки вариантов до 32 символов. Описания вариантов до 95 символов. Bullet до 38 символов.
-                Для milestones в плане пиши прикладные описания до 130 символов: что именно делать, как часто и зачем.
+                Для milestones в плане пиши 6-8 прикладных этапов до 150 символов: что именно делать, как часто, с кем/чем сверяться и зачем.
                 """.formatted(
                 shortHash(user.storageId()),
                 clip(onboarding.goal(), 500),
@@ -175,9 +175,12 @@ public final class AiSuggestionService {
                         "План собран под цель: " + clip(goal, 80),
                         List.of(
                                 new MilestoneSuggestion("Вы здесь", "Сегодня фиксируем старт и первый шаг"),
-                                new MilestoneSuggestion("Первый месяц", "Собрать ритм и убрать лишние препятствия"),
-                                new MilestoneSuggestion("Второй месяц", "Усилить действия и заметить первые результаты"),
-                                new MilestoneSuggestion("Третий месяц", "Закрепить систему и подготовить следующий уровень")
+                                new MilestoneSuggestion("Первая неделя", "Собрать минимальный ритм и выбрать короткие действия на каждый день"),
+                                new MilestoneSuggestion("Неделя 2", "Настроить напоминания, поддержку и запасной вариант для сложных дней"),
+                                new MilestoneSuggestion("Первый месяц", "Убрать главные препятствия и закрепить действия в обычном графике"),
+                                new MilestoneSuggestion("Проверка прогресса", "Раз в неделю сравнивать план и реальность, затем упрощать слабые места"),
+                                new MilestoneSuggestion("Поддержка", "Подключить людей, среду или привычные триггеры, чтобы не держаться только на мотивации"),
+                                new MilestoneSuggestion("Закрепление", "Сохранить работающие действия и подготовить следующий уровень без перегруза")
                         )
                 ),
                 "fallback"

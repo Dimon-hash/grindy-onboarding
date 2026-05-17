@@ -20,6 +20,18 @@
     height: 56.3981%;
 }
 
+.keyboard-open .phone-screen.is-goal::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: max(0px, var(--keyboard-inset));
+    z-index: 6;
+    height: 130px;
+    background: #fff;
+    pointer-events: none;
+}
+
 .goal-input-layer textarea {
     display: block;
     width: 100%;
@@ -100,6 +112,10 @@
     letter-spacing: -0.02em;
     cursor: pointer;
     transition: bottom 180ms ease;
+}
+
+.keyboard-open .goal-input-layer {
+    height: min(330px, calc(var(--app-height) - var(--keyboard-inset) - 286px));
 }
 
 .goal-next-button:disabled {
