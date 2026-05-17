@@ -6,12 +6,12 @@ import {escapeAttr, escapeHtml} from "./utils.js";
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260517-plan-detail" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260517-your-plan-fix" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260517-plan-detail" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260517-your-plan-fix" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -60,10 +60,10 @@ function chooseGoalStep(step) {
     const selectedIndex = Math.max(0, goals.findIndex((goal, index) => goalValue(goal, index) === selected));
     const selectedGoal = goals[selectedIndex] || goals[0];
     const art = [
-        "/Choose%20the%20Goal.svg?v=20260517-plan-detail",
-        "/Choose%20the%20Goal-2.svg?v=20260517-plan-detail",
-        "/Choose%20the%20Goal-3.svg?v=20260517-plan-detail"
-    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260517-plan-detail";
+        "/Choose%20the%20Goal.svg?v=20260517-your-plan-fix",
+        "/Choose%20the%20Goal-2.svg?v=20260517-your-plan-fix",
+        "/Choose%20the%20Goal-3.svg?v=20260517-your-plan-fix"
+    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260517-your-plan-fix";
 
     return `
         <div class="choose-goal-stage ${state.goalCardFlip ? "is-flipping" : ""}">
@@ -102,8 +102,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-plan-detail"
-        : "/Your%20Plan.svg?v=20260517-plan-detail";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-your-plan-fix"
+        : "/Your%20Plan.svg?v=20260517-your-plan-fix";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -121,7 +121,7 @@ function planCorrectionStep(step) {
     const filled = Boolean(draft.trim());
     return `
         <div class="your-plan-scroll is-dimmed">
-            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-plan-detail" alt="${escapeAttr(step.title)}">
+            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-your-plan-fix" alt="${escapeAttr(step.title)}">
             ${planOverlay(planForDisplay())}
             <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
         </div>
@@ -142,7 +142,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260517-plan-detail" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260517-your-plan-fix" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -283,7 +283,7 @@ function planOverlay(plan) {
     if (!plan || !Array.isArray(plan.milestones)) {
         return "";
     }
-    const milestones = plan.milestones.slice(0, 8);
+    const milestones = planMilestonesForDisplay(plan).slice(0, 8);
     return `
         <section class="your-plan-live-content">
             <p>${escapeHtml(plan.summary || "План собран под твою цель и текущие условия.")}</p>
@@ -294,15 +294,31 @@ function planOverlay(plan) {
                         <div>
                             <h2>${escapeHtml(milestone.title || "Этап")}</h2>
                             <p>${escapeHtml(milestone.description || "Понятный следующий шаг")}</p>
-                            <ul class="your-plan-live-details">
-                                ${milestoneDetails(milestone, index).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
-                            </ul>
+                            ${milestone.current ? "" : `
+                                <ul class="your-plan-live-details">
+                                    ${milestoneDetails(milestone, index).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+                                </ul>
+                            `}
                         </div>
                     </article>
                 `).join("")}
             </div>
         </section>
     `;
+}
+
+function planMilestonesForDisplay(plan) {
+    const source = Array.isArray(plan.milestones) ? plan.milestones.filter(Boolean) : [];
+    const firstTitle = String((source[0] && source[0].title) || "").toLowerCase();
+    const hasCurrentPoint = firstTitle.includes("вы здесь") || firstTitle.includes("сегодня");
+    const currentPoint = {
+        title: "Вы здесь",
+        description: "Сегодня начинаем",
+        current: true
+    };
+    return hasCurrentPoint
+        ? [{...source[0], current: true}, ...source.slice(1)]
+        : [currentPoint, ...source];
 }
 
 function planForDisplay() {

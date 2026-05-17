@@ -234,6 +234,7 @@
     inset: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    padding-bottom: max(172px, calc(env(safe-area-inset-bottom) + 150px));
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
 }
@@ -243,9 +244,9 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: 382px;
+    top: 282px;
     z-index: 2;
-    min-height: 640px;
+    min-height: 980px;
     background: #fff;
     pointer-events: none;
 }
@@ -285,41 +286,37 @@
 
 .your-plan-scroll-spacer {
     display: block;
-    height: 118px;
+    height: 154px;
 }
 
 .your-plan-live-content {
     position: relative;
     z-index: 4;
-    margin: 394px 24px 190px;
-    padding: 0 0 20px;
+    margin: 286px 24px 156px;
+    padding: 0 0 18px;
     background: #fff;
     color: #000;
     pointer-events: auto;
 }
 
 .your-plan-live-content > p {
-    margin: 0 0 14px;
-    padding: 0 10px;
-    color: rgba(9, 7, 35, 0.42);
-    font-size: 14px;
-    line-height: 130%;
-    font-weight: 600;
-    text-align: center;
+    display: none;
 }
 
 .your-plan-live-timeline {
+    position: relative;
     display: grid;
-    gap: 12px;
+    gap: 0;
+    padding: 0 0 22px;
 }
 
 .your-plan-live-point {
     position: relative;
     display: grid;
-    grid-template-columns: 30px minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+    column-gap: 10px;
     min-height: 0;
-    padding: 14px 0 16px;
+    padding: 10px 0 24px;
     border-bottom: 1px solid rgba(9, 7, 35, 0.06);
     text-align: left;
 }
@@ -327,12 +324,23 @@
 .your-plan-live-point::before {
     content: "";
     position: absolute;
-    left: 14px;
-    top: 34px;
-    bottom: -13px;
+    left: calc(50% - 1px);
+    top: 36px;
+    bottom: -4px;
     width: 2px;
     border-radius: 999px;
     background: rgba(9, 7, 35, 0.08);
+}
+
+.your-plan-live-point > div {
+    grid-column: 3;
+    min-width: 0;
+    padding-top: 0;
+}
+
+.your-plan-live-point:nth-child(even) > div {
+    grid-column: 1;
+    text-align: right;
 }
 
 .your-plan-live-point:last-child {
@@ -350,6 +358,7 @@
 .your-plan-live-dot {
     position: relative;
     z-index: 2;
+    grid-column: 2;
     display: block;
     width: 18px;
     height: 18px;
@@ -367,9 +376,9 @@
 }
 
 .your-plan-live-point h2 {
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     color: #000;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 120%;
     font-weight: 800;
     letter-spacing: 0;
@@ -379,7 +388,7 @@
 .your-plan-live-point p {
     margin: 0;
     color: rgba(0, 0, 0, 0.45);
-    font-size: 15px;
+    font-size: 13px;
     line-height: 130%;
     font-weight: 600;
     letter-spacing: 0;
@@ -388,8 +397,8 @@
 
 .your-plan-live-details {
     display: grid;
-    gap: 6px;
-    margin: 10px 0 0;
+    gap: 5px;
+    margin: 9px 0 0;
     padding: 0;
     list-style: none;
 }
@@ -398,10 +407,11 @@
     position: relative;
     padding-left: 14px;
     color: rgba(0, 0, 0, 0.52);
-    font-size: 13px;
+    font-size: 11px;
     line-height: 130%;
     font-weight: 600;
     letter-spacing: 0;
+    text-align: left;
 }
 
 .your-plan-live-details li::before {
@@ -418,7 +428,7 @@
 .your-plan-back-hit-area {
     position: absolute;
     left: 54px;
-    top: 175px;
+    top: 121px;
     z-index: 8;
     width: 34px;
     height: 34px;
@@ -433,12 +443,12 @@
     left: 54px;
     right: 54px;
     bottom: max(100px, calc(env(safe-area-inset-bottom) + 83px));
-    z-index: 8;
+    z-index: 12;
     width: auto;
     min-height: 30px;
     padding: 0;
     border: 0;
-    background: transparent;
+    background: #fff;
     color: #000;
     font-size: 16px;
     line-height: 130%;
@@ -451,7 +461,7 @@
     left: 24px;
     right: 24px;
     bottom: max(41px, calc(env(safe-area-inset-bottom) + 24px));
-    z-index: 8;
+    z-index: 12;
     width: auto;
     height: 50px;
     padding: 15px 40px;

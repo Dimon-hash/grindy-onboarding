@@ -1,5 +1,5 @@
 export const CUSTOM_VALUE = "__custom__";
-export const APP_VERSION = "20260517-plan-detail";
+export const APP_VERSION = "20260517-your-plan-fix";
 
 export function resetStoredUiVersion() {
     if (localStorage.getItem("grindy.uiVersion") === APP_VERSION) {
