@@ -169,6 +169,7 @@ function bindStep(step) {
     bindChooseGoalActions(step);
     bindPlanActions();
     bindCustomOpen(step);
+    bindKeyboardDismiss();
 }
 
 function bindNavigation() {
@@ -214,6 +215,7 @@ function bindGoalInput(step) {
         autosave();
         queueSuggestionsRefresh();
     });
+    input.addEventListener("keydown", handleDoneKey);
 }
 
 function bindCustomInput(step) {
@@ -221,22 +223,21 @@ function bindCustomInput(step) {
     if (!input) {
         return;
     }
-    const next = document.getElementById("next");
+    const save = document.getElementById("custom-drawer-save");
     const layer = input.closest(".native-custom-panel, .native-custom-drawer, .experience-drawer-input-layer");
     input.addEventListener("focus", () => setKeyboardOpen(true));
     input.addEventListener("blur", () => setKeyboardOpen(false));
     input.addEventListener("input", () => {
         const draft = input.value.slice(0, input.maxLength || 220);
         state.customDrafts[step.id] = draft;
-        state.onboarding[step.id] = draft.trim() ? draft : CUSTOM_VALUE;
         if (layer) {
             layer.classList.toggle("has-value", Boolean(draft.trim()));
         }
-        if (next) {
-            next.disabled = !canContinue(step);
+        if (save) {
+            save.disabled = !draft.trim();
         }
-        autosave();
     });
+    input.addEventListener("keydown", handleDoneKey);
 
     const close = document.getElementById("custom-drawer-close");
     if (close) {
@@ -244,6 +245,10 @@ function bindCustomInput(step) {
             blurActiveControl();
             closeCustomDrawer(step);
         });
+    }
+
+    if (save) {
+        save.addEventListener("click", () => commitCustomDrawer(step));
     }
 }
 
@@ -385,6 +390,7 @@ function bindPlanCorrectionInput() {
             save.disabled = !filled;
         }
     });
+    input.addEventListener("keydown", handleDoneKey);
 }
 
 function bindTextSuggestions() {
@@ -450,8 +456,7 @@ function bindCustomOpen(step) {
         state.customDrafts[step.id] = isCustomStepValue(step, current) && !isSavedChoiceValue(current) && current !== CUSTOM_VALUE
             ? current
             : state.customDrafts[step.id] || "";
-        state.onboarding[step.id] = state.customDrafts[step.id] || CUSTOM_VALUE;
-        autosave();
+        state.onboarding[step.id] = CUSTOM_VALUE;
         render();
         window.requestAnimationFrame(() => {
             const input = document.getElementById("custom-choice-input");
@@ -460,6 +465,18 @@ function bindCustomOpen(step) {
             }
         });
     });
+}
+
+function commitCustomDrawer(step) {
+    const draft = (state.customDrafts[step.id] || "").trim();
+    if (!draft) {
+        return;
+    }
+    blurActiveControl();
+    state.onboarding[step.id] = draft;
+    state.customDrawerStepId = "";
+    autosave();
+    render();
 }
 
 async function nextStep() {
@@ -533,8 +550,7 @@ function previousStep() {
 }
 
 function closeCustomDrawer(step) {
-    const draft = (state.customDrafts[step.id] || "").trim();
-    if (!draft && state.onboarding[step.id] === CUSTOM_VALUE) {
+    if (state.onboarding[step.id] === CUSTOM_VALUE) {
         state.onboarding[step.id] = state.customPreviousValues[step.id] || choiceOptionValue(step, 0);
     }
     state.customDrawerStepId = "";
@@ -692,6 +708,36 @@ function blurActiveControl() {
     setKeyboardOpen(false);
 }
 
+function bindKeyboardDismiss() {
+    const screen = document.querySelector(".phone-screen");
+    if (!screen) {
+        return;
+    }
+    screen.addEventListener("pointerdown", (event) => {
+        if (!document.body.classList.contains("keyboard-open")) {
+            return;
+        }
+        if (event.target.closest("textarea, button, .ai-text-suggestions")) {
+            return;
+        }
+        blurActiveControl();
+    }, {capture: true});
+}
+
+function handleDoneKey(event) {
+    if (event.key !== "Enter" || event.shiftKey || event.isComposing) {
+        return;
+    }
+    event.preventDefault();
+    blurActiveControl();
+}
+
+function keepViewportPinned() {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+}
+
 function bindViewport() {
     if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", () => {
@@ -720,7 +766,11 @@ function setKeyboardOpen(open) {
     window.clearTimeout(setKeyboardOpen.timer);
     updateKeyboardInset(open);
     if (open) {
-        setKeyboardOpen.timer = window.setTimeout(() => updateKeyboardInset(true), 320);
+        keepViewportPinned();
+        setKeyboardOpen.timer = window.setTimeout(() => {
+            updateKeyboardInset(true);
+            keepViewportPinned();
+        }, 320);
     }
 }
 

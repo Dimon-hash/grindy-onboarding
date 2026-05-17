@@ -111,9 +111,9 @@
     left: 16px;
     right: 16px;
     top: auto;
-    bottom: max(118px, calc(env(safe-area-inset-bottom) + 101px + var(--keyboard-inset)));
+    bottom: max(18px, calc(env(safe-area-inset-bottom) + 16px + var(--keyboard-inset)));
     overflow: hidden;
-    z-index: 22;
+    z-index: 24;
     transition: bottom 180ms ease;
 }
 
@@ -175,6 +175,24 @@
     font-size: 16px;
     line-height: 140%;
     font-weight: 600;
+}
+
+.native-custom-save-button {
+    width: 100%;
+    height: 50px;
+    padding: 15px 28px;
+    border-radius: 12px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 16px;
+    line-height: 130%;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.native-custom-save-button:disabled {
+    color: rgba(255, 255, 255, 0.4);
+    cursor: default;
 }
 
 .native-custom-panel .ai-text-suggestions {
@@ -276,11 +294,6 @@
 }
 
 .phone-screen.has-custom-drawer .native-choice-footer {
-    bottom: max(18px, calc(var(--keyboard-inset) + env(safe-area-inset-bottom) + 16px));
-    gap: 0;
-}
-
-.phone-screen.has-custom-drawer .native-custom-button {
     display: none;
 }
 

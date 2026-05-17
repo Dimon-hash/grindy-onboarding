@@ -6,12 +6,12 @@ import {escapeAttr, escapeHtml} from "./utils.js";
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260517-saved-choice" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260517-keyboard-plan" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260517-saved-choice" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260517-keyboard-plan" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -99,8 +99,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-saved-choice"
-        : "/Your%20Plan.svg?v=20260517-saved-choice";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-keyboard-plan"
+        : "/Your%20Plan.svg?v=20260517-keyboard-plan";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -118,7 +118,7 @@ function planCorrectionStep(step) {
     const filled = Boolean(draft.trim());
     return `
         <div class="your-plan-scroll is-dimmed">
-            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-saved-choice" alt="${escapeAttr(step.title)}">
+            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-keyboard-plan" alt="${escapeAttr(step.title)}">
             ${planOverlay(planForDisplay())}
             <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
         </div>
@@ -139,7 +139,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260517-saved-choice" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260517-keyboard-plan" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -176,8 +176,8 @@ function nativeChoiceStep(step) {
     const visibleOptions = selectedIsCustom && selected !== CUSTOM_VALUE
         ? [
             {
-                title: "Свой вариант",
-                description: selected,
+                title: customChoiceTitle(selected),
+                description: customChoiceDescription(selected),
                 value: selected,
                 custom: true
             },
@@ -202,6 +202,7 @@ function nativeChoiceStep(step) {
                 <span>${escapeHtml(customDrawerTitle(step))}</span>
                 <textarea id="custom-choice-input" maxlength="220" enterkeyhint="done" placeholder="${escapeAttr(customPlaceholder(step))}">${escapeHtml(draft)}</textarea>
                 ${textSuggestions("native-custom", choiceTextHints(step), "custom-choice-input")}
+                <button id="custom-drawer-save" class="native-custom-save-button" type="button" ${draft.trim() ? "" : "disabled"}>Выбрать вариант</button>
             </section>
         ` : `
             <section class="native-choice-list" aria-label="${escapeAttr(step.title)}">
@@ -251,12 +252,33 @@ function choiceOptions(step) {
     });
 }
 
+function customChoiceTitle(value) {
+    const clean = String(value || "").trim().replace(/\s+/g, " ");
+    if (!clean) {
+        return "Мой вариант";
+    }
+    const sentence = clean.split(/[.!?]/)[0].trim() || clean;
+    return sentence.length > 42 ? `${sentence.slice(0, 39).trim()}...` : sentence;
+}
+
+function customChoiceDescription(value) {
+    const clean = String(value || "").trim().replace(/\s+/g, " ");
+    if (!clean) {
+        return "Твой ответ будет учтён при составлении плана.";
+    }
+    if (clean.length <= 42) {
+        return "Твой ответ учтён при составлении плана.";
+    }
+    const tail = clean.slice(42).trim();
+    return tail || "Твой ответ учтён при составлении плана.";
+}
+
 function chooseGoalArt(index) {
     return [
-        "/Choose%20the%20Goal.svg?v=20260517-saved-choice",
-        "/Choose%20the%20Goal-2.svg?v=20260517-saved-choice",
-        "/Choose%20the%20Goal-3.svg?v=20260517-saved-choice"
-    ][index] || "/Choose%20the%20Goal.svg?v=20260517-saved-choice";
+        "/Choose%20the%20Goal.svg?v=20260517-keyboard-plan",
+        "/Choose%20the%20Goal-2.svg?v=20260517-keyboard-plan",
+        "/Choose%20the%20Goal-3.svg?v=20260517-keyboard-plan"
+    ][index] || "/Choose%20the%20Goal.svg?v=20260517-keyboard-plan";
 }
 
 function goalOptions(step) {
@@ -339,6 +361,9 @@ function planMilestonesForDisplay(plan) {
 }
 
 function planForDisplay() {
+    if (state.planChanged && state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan") {
+        return adjustedPlanForDisplay(state.onboarding.selectedPlan);
+    }
     if (state.suggestions.plan && Array.isArray(state.suggestions.plan.milestones) && suggestionsMatchCurrentGoal()) {
         return state.suggestions.plan;
     }
@@ -353,6 +378,23 @@ function planForDisplay() {
             {title: "Проверка прогресса", description: "Раз в неделю смотри, что сработало, и корректируй план без чувства вины."},
             {title: "Поддержка", description: "Подключи людей, напоминания или среду, чтобы не тащить цель только на мотивации."},
             {title: "Закрепление", description: "Усиль результат и подготовь следующий уровень, когда базовый ритм станет устойчивым."}
+        ]
+    };
+}
+
+function adjustedPlanForDisplay(correction) {
+    const goal = (state.onboarding.goal || "цели").trim();
+    const request = String(correction || "").trim();
+    return {
+        summary: `План скорректирован под цель: ${goal.slice(0, 90)}${goal.length > 90 ? "..." : ""}. Учтено: ${request.slice(0, 120)}${request.length > 120 ? "..." : ""}`,
+        milestones: [
+            {title: "Уточнить цель", description: "Запиши точный результат, срок и главный показатель прогресса, чтобы план был измеримым."},
+            {title: "Настроить режим", description: "Выбери 3-4 удобных окна в неделю и заранее реши, что делать в загруженный день."},
+            {title: "Первый шаг", description: `Начни с минимального действия по запросу: ${request.slice(0, 82)}${request.length > 82 ? "..." : ""}`},
+            {title: "Поддержка среды", description: "Подготовь место, напоминания и людей, которые помогут не бросить план на второй неделе."},
+            {title: "Контроль недели", description: "Каждую неделю отмечай факт выполнения, сложность и одну причину, почему действие получилось или сорвалось."},
+            {title: "Корректировка", description: "Если шаги оказались слишком тяжёлыми, уменьши объём, но сохрани регулярность и понятный ритм."},
+            {title: "Закрепление", description: "Оставь работающие привычки, убери лишнее и добавь следующий уровень только после стабильной недели."}
         ]
     };
 }
@@ -441,36 +483,42 @@ function milestoneDetails(milestone, index) {
     if (index === 0 || title.includes("старт") || title.includes("здесь")) {
         return [
             "Запиши исходное состояние и главный критерий успеха.",
-            "Выбери действие на сегодня, которое можно сделать за 10-15 минут."
+            "Выбери действие на сегодня, которое можно сделать за 10-15 минут.",
+            "Поставь простое напоминание, чтобы не держать план только в голове."
         ];
     }
     if (title.includes("недел") || title.includes("перв")) {
         return [
             "Поставь 3-4 коротких действия в календарь.",
-            "Отмечай выполнение каждый день, даже если сделал минимум."
+            "Отмечай выполнение каждый день, даже если сделал минимум.",
+            "В конце недели оставь только те шаги, которые реально вписались в жизнь."
         ];
     }
     if (title.includes("поддерж")) {
         return [
             "Предупреди близких или коллег, что тебе важен новый ритм.",
-            "Подготовь среду заранее: убери лишние препятствия и добавь напоминания."
+            "Подготовь среду заранее: убери лишние препятствия и добавь напоминания.",
+            "Назначь один внешний якорь: человек, чат или регулярная проверка."
         ];
     }
     if (title.includes("провер") || title.includes("контрол") || title.includes("прогресс")) {
         return [
             "Раз в неделю сравни план и реальность без самокритики.",
-            "Оставь то, что работает, а сложные действия упрости."
+            "Оставь то, что работает, а сложные действия упрости.",
+            "Фиксируй не только результат, но и причину, почему получилось."
         ];
     }
     if (title.includes("закреп")) {
         return [
             "Сохрани привычки, которые дали лучший результат.",
-            "Выбери следующий уровень только после стабильной недели."
+            "Выбери следующий уровень только после стабильной недели.",
+            "Определи, как будешь поддерживать результат после завершения плана."
         ];
     }
     return [
         "Сделай шаг маленьким, измеримым и понятным.",
-        "Если день сорвался, вернись к минимальному варианту завтра."
+        "Если день сорвался, вернись к минимальному варианту завтра.",
+        "Раз в несколько дней проверяй, не стал ли план слишком тяжёлым."
     ];
 }
 

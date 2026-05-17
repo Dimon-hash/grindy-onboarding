@@ -90,6 +90,10 @@
     transition: bottom 180ms ease;
 }
 
+.keyboard-open .ai-text-suggestions-goal {
+    bottom: max(30px, calc(env(safe-area-inset-bottom) + 18px + var(--keyboard-inset)));
+}
+
 .goal-input-layer:not(.has-value):not(.is-focused) .goal-counter {
     opacity: 0;
 }
@@ -116,6 +120,11 @@
 
 .keyboard-open .goal-input-layer {
     height: min(330px, calc(var(--app-height) - var(--keyboard-inset) - 286px));
+}
+
+.keyboard-open .goal-next-button {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .goal-next-button:disabled {
