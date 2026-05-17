@@ -6,12 +6,12 @@ import {escapeAttr, escapeHtml} from "./utils.js";
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260517-clean-top-ai" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260517-polished-ui" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260517-clean-top-ai" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260517-polished-ui" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -60,10 +60,10 @@ function chooseGoalStep(step) {
     const selectedIndex = Math.max(0, goals.findIndex((goal, index) => goalValue(goal, index) === selected));
     const selectedGoal = goals[selectedIndex] || goals[0];
     const art = [
-        "/Choose%20the%20Goal.svg?v=20260517-clean-top-ai",
-        "/Choose%20the%20Goal-2.svg?v=20260517-clean-top-ai",
-        "/Choose%20the%20Goal-3.svg?v=20260517-clean-top-ai"
-    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260517-clean-top-ai";
+        "/Choose%20the%20Goal.svg?v=20260517-polished-ui",
+        "/Choose%20the%20Goal-2.svg?v=20260517-polished-ui",
+        "/Choose%20the%20Goal-3.svg?v=20260517-polished-ui"
+    ][selectedIndex] || "/Choose%20the%20Goal.svg?v=20260517-polished-ui";
 
     return `
         <div class="choose-goal-stage ${state.goalCardFlip ? "is-flipping" : ""}">
@@ -102,8 +102,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-clean-top-ai"
-        : "/Your%20Plan.svg?v=20260517-clean-top-ai";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-polished-ui"
+        : "/Your%20Plan.svg?v=20260517-polished-ui";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -119,25 +119,30 @@ function yourPlanStep(step) {
 function planCorrectionStep(step) {
     const draft = state.planDraft || "";
     const filled = Boolean(draft.trim());
-    const art = filled
-        ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260517-clean-top-ai"
-        : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260517-clean-top-ai";
     return `
-        <img class="screen-art your-plan-edit-art" src="${art}" alt="${escapeAttr(step.title)}">
+        <div class="your-plan-scroll is-dimmed">
+            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-polished-ui" alt="${escapeAttr(step.title)}">
+            ${planOverlay(planForDisplay())}
+            <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
+        </div>
         <button id="back" class="your-plan-back-hit-area" type="button" aria-label="Назад"></button>
-        <button id="plan-correction-close" class="plan-correction-close-hit-area" type="button" aria-label="Закрыть корректировку плана"></button>
-        <label class="plan-correction-input-layer ${filled ? "has-value" : ""}">
-            <textarea id="plan-correction-input" maxlength="220" enterkeyhint="done" aria-label="Что хотите поменять?" placeholder="Хочу сделать план короче и интенсивнее">${escapeHtml(draft)}</textarea>
-        </label>
-        ${textSuggestions("plan-correction", planCorrectionHints(), "plan-correction-input")}
-        <button id="plan-correction-save" class="plan-correction-save-hit-area" type="button" ${filled ? "" : "disabled"}>Скорректировать план</button>
+        <div class="plan-correction-backdrop" aria-hidden="true"></div>
+        <section class="plan-correction-modal" aria-label="Корректировка плана">
+            <button id="plan-correction-close" class="plan-correction-close-hit-area" type="button" aria-label="Закрыть корректировку плана"></button>
+            <h2>Что хотите поменять?</h2>
+            <label class="plan-correction-input-layer ${filled ? "has-value" : ""}">
+                <textarea id="plan-correction-input" maxlength="220" enterkeyhint="done" aria-label="Что хотите поменять?" placeholder="Хочу сделать план короче и интенсивнее">${escapeHtml(draft)}</textarea>
+            </label>
+            ${textSuggestions("plan-correction", planCorrectionHints(), "plan-correction-input")}
+            <button id="plan-correction-save" class="plan-correction-save-hit-area" type="button" ${filled ? "" : "disabled"}>Скорректировать план</button>
+        </section>
     `;
 }
 
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260517-clean-top-ai" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260517-polished-ui" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -303,7 +308,7 @@ function planForDisplay() {
 
 function experienceDrawerStep(step, draft) {
     return `
-        <img class="screen-art experience-drawer-art" src="/experience-drawer-opened.svg?v=20260517-clean-top-ai" alt="${escapeAttr(step.title)}">
+        <img class="screen-art experience-drawer-art" src="/experience-drawer-opened.svg?v=20260517-polished-ui" alt="${escapeAttr(step.title)}">
         <button id="back" class="experience-drawer-back-hit-area" type="button" aria-label="Назад"></button>
         <button id="custom-drawer-close" class="experience-drawer-close-hit-area" type="button" aria-label="Закрыть свой вариант"></button>
         <label class="experience-drawer-input-layer ${draft.trim() ? "has-value" : ""}">

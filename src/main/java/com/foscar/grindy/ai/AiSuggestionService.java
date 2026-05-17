@@ -28,7 +28,7 @@ import java.util.Map;
 public final class AiSuggestionService {
     private static final String DEFAULT_BASE_URL = "https://api.aitunnel.ru/v1";
     private static final String DEFAULT_MODEL = "gpt-4o-mini";
-    private static final String PROMPT_VERSION = "20260517-clean-top-ai";
+    private static final String PROMPT_VERSION = "20260517-polished-ui";
 
     private final Json json;
     private final UserStore userStore;

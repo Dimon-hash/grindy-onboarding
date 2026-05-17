@@ -254,6 +254,22 @@
     display: none;
 }
 
+.your-plan-scroll.is-dimmed {
+    filter: none;
+}
+
+.your-plan-scroll.is-dimmed::before {
+    content: "";
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: block;
+    height: var(--app-height);
+    margin-bottom: calc(-1 * var(--app-height));
+    background: rgba(0, 0, 0, 0.22);
+    pointer-events: none;
+}
+
 .your-plan-art {
     position: absolute;
     left: 0;
@@ -275,7 +291,7 @@
 .your-plan-live-content {
     position: relative;
     z-index: 4;
-    margin: 338px 24px 144px;
+    margin: 338px 24px 190px;
     padding: 0 0 20px;
     background: #fff;
     color: #000;
@@ -419,34 +435,79 @@
     cursor: pointer;
 }
 
-.your-plan-edit-art {
+.plan-correction-backdrop {
     position: absolute;
     inset: 0;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.22);
+}
+
+.plan-correction-modal {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: max(20px, calc(env(safe-area-inset-bottom) + 16px + var(--keyboard-inset)));
+    z-index: 21;
+    display: grid;
+    gap: 12px;
+    padding: 22px 18px 20px;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 18px 60px rgba(9, 7, 35, 0.18);
+    transition: bottom 180ms ease;
+}
+
+.plan-correction-modal h2 {
+    margin: 0;
+    padding-right: 42px;
+    color: #000;
+    font-size: 24px;
+    line-height: 120%;
+    font-weight: 700;
+    letter-spacing: 0;
 }
 
 .plan-correction-close-hit-area {
     position: absolute;
-    left: 331px;
-    top: 280px;
-    z-index: 9;
-    width: 34px;
-    height: 34px;
+    right: 18px;
+    top: 18px;
+    z-index: 2;
+    width: 36px;
+    height: 36px;
     padding: 0;
     border: 0;
+    border-radius: 999px;
     background: transparent;
     cursor: pointer;
 }
 
-.plan-correction-input-layer {
+.plan-correction-close-hit-area::before,
+.plan-correction-close-hit-area::after {
+    content: "";
     position: absolute;
-    left: 34px;
-    top: 298px;
-    z-index: 8;
-    width: 322px;
-    height: 133px;
+    left: 50%;
+    top: 50%;
+    width: 22px;
+    height: 2px;
+    border-radius: 999px;
+    background: rgba(9, 7, 35, 0.22);
+}
+
+.plan-correction-close-hit-area::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.plan-correction-close-hit-area::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.plan-correction-input-layer {
+    display: block;
+    width: 100%;
+    height: 138px;
     padding: 16px;
     border-radius: 12px;
-    background: transparent;
+    background: #f6f6f7;
 }
 
 .plan-correction-input-layer textarea {
@@ -471,11 +532,7 @@
 }
 
 .plan-correction-save-hit-area {
-    position: absolute;
-    left: 34px;
-    top: 486px;
-    z-index: 9;
-    width: 322px;
+    width: 100%;
     height: 50px;
     padding: 15px 40px;
     border-radius: 12px;
@@ -493,9 +550,24 @@
 }
 
 .ai-text-suggestions-plan-correction {
-    position: absolute;
-    left: 34px;
-    right: 34px;
-    top: 433px;
-    z-index: 10;
+    width: 100%;
+    min-width: 0;
+    padding-bottom: 2px;
+}
+
+@media (max-height: 760px) {
+    .plan-correction-modal {
+        gap: 10px;
+        padding-top: 18px;
+        padding-bottom: 16px;
+        border-radius: 20px;
+    }
+
+    .plan-correction-modal h2 {
+        font-size: 21px;
+    }
+
+    .plan-correction-input-layer {
+        height: 118px;
+    }
 }

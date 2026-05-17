@@ -341,7 +341,6 @@ function bindPlanCorrectionInput() {
     }
     const save = document.getElementById("plan-correction-save");
     const layer = input.closest(".plan-correction-input-layer");
-    const art = document.querySelector(".your-plan-edit-art");
     input.addEventListener("focus", () => setKeyboardOpen(true));
     input.addEventListener("blur", () => setKeyboardOpen(false));
     input.addEventListener("input", () => {
@@ -352,11 +351,6 @@ function bindPlanCorrectionInput() {
         }
         if (save) {
             save.disabled = !filled;
-        }
-        if (art) {
-            art.src = filled
-                ? "/Your%20Plan,%20Change%20the%20plan,%20Filled.svg?v=20260517-clean-top-ai"
-                : "/Your%20Plan,%20Change%20the%20plan.svg?v=20260517-clean-top-ai";
         }
     });
 }
