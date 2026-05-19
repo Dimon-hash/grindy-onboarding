@@ -99,7 +99,7 @@
 
 .ai-text-suggestions-goal .ai-text-suggestion {
     width: fit-content;
-    max-width: min(284px, 100%);
+    max-width: min(310px, 100%);
     min-height: 28px;
     padding: 6px 10px;
     font-size: 12px;

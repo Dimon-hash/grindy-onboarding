@@ -96,6 +96,10 @@
     gap: 8px;
 }
 
+.native-choice-list.is-loading {
+    pointer-events: none;
+}
+
 .native-custom-panel {
     display: grid;
     gap: 12px;
@@ -199,6 +203,12 @@
     width: 100%;
     min-width: 0;
     margin-top: -2px;
+    max-height: 86px;
+    overflow: hidden;
+}
+
+.native-custom-panel .ai-text-suggestion {
+    max-width: 100%;
 }
 
 .native-custom-panel textarea::placeholder {
@@ -220,6 +230,21 @@
     color: var(--ink);
     text-align: left;
     cursor: pointer;
+}
+
+.native-choice-card-loading {
+    opacity: 0.78;
+}
+
+.native-choice-card-loading .native-choice-text strong {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    -webkit-line-clamp: 1;
+}
+
+.native-choice-card-loading .native-radio {
+    opacity: 0.4;
 }
 
 .native-choice-text {

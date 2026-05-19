@@ -1,5 +1,5 @@
 import {CUSTOM_VALUE} from "./config.js";
-import {state} from "./state.js";
+import {currentSuggestionsKey, state} from "./state.js";
 
 export function canContinue(step) {
     if (!step || step.type === "loader" || step.type === "welcome") {
@@ -62,8 +62,7 @@ export function effectiveOptions(step) {
 }
 
 function suggestionsMatchCurrentGoal() {
-    const savedGoal = (state.suggestionsKey || "").split("|")[0] || "";
-    return savedGoal === (state.onboarding.goal || "").trim();
+    return state.suggestionsKey === currentSuggestionsKey();
 }
 
 function optionTitle(option) {

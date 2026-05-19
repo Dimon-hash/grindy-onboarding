@@ -28,6 +28,14 @@ export const state = {
         goals: [],
         plan: null
     },
+    choiceDepth: {
+        experience: 0,
+        conditions: 0
+    },
+    choiceHistory: {
+        experience: [],
+        conditions: []
+    },
     choiceTouched: {
         experience: false,
         conditions: false
@@ -49,6 +57,8 @@ export const state = {
         goal: "",
         experience: "",
         conditions: "",
+        experienceHistory: "",
+        conditionsHistory: "",
         selectedGoal: "",
         selectedPlan: ""
     }
@@ -58,3 +68,13 @@ export const nodes = {
     app: document.getElementById("app"),
     onboardingWizard: document.getElementById("onboarding-wizard")
 };
+
+export function currentSuggestionsKey() {
+    return [
+        state.onboarding.goal || "",
+        state.onboarding.experienceHistory || "",
+        state.onboarding.conditionsHistory || "",
+        state.onboarding.selectedGoal || "",
+        state.onboarding.selectedPlan || ""
+    ].map((value) => String(value || "").trim()).join("|");
+}

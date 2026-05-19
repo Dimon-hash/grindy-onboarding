@@ -30,8 +30,19 @@ export async function loadCurrentUser() {
 export async function loadOnboardingSuggestions() {
     return api("/api/onboarding/suggestions", {
         method: "POST",
-        body: state.onboarding
+        body: {
+            ...state.onboarding,
+            experience: readableChoiceValue(state.onboarding.experience),
+            conditions: readableChoiceValue(state.onboarding.conditions),
+            selectedGoal: readableChoiceValue(state.onboarding.selectedGoal),
+            experienceHistory: state.onboarding.experienceHistory || state.choiceHistory.experience.join(" | "),
+            conditionsHistory: state.onboarding.conditionsHistory || state.choiceHistory.conditions.join(" | ")
+        }
     });
+}
+
+function readableChoiceValue(value) {
+    return String(value || "").trim().replace(/-\d+$/, "").trim();
 }
 
 export async function api(path, options = {}) {

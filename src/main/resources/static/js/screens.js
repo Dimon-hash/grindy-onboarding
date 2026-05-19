@@ -1,17 +1,17 @@
 import {CUSTOM_VALUE} from "./config.js";
-import {state} from "./state.js";
+import {currentSuggestionsKey, state} from "./state.js";
 import {canContinue, choiceOptionValue, choiceTitleFromValue, effectiveOptions, isCustomStepValue, isSavedChoiceValue} from "./validators.js";
 import {escapeAttr, escapeHtml} from "./utils.js";
 
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260519-ai-logic-v1" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260519-deep-quiz-v1" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260519-ai-logic-v1" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260519-deep-quiz-v1" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -99,8 +99,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260519-ai-logic-v1"
-        : "/Your%20Plan.svg?v=20260519-ai-logic-v1";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260519-deep-quiz-v1"
+        : "/Your%20Plan.svg?v=20260519-deep-quiz-v1";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -118,7 +118,7 @@ function planCorrectionStep(step) {
     const filled = Boolean(draft.trim());
     return `
         <div class="your-plan-scroll is-dimmed">
-            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260519-ai-logic-v1" alt="${escapeAttr(step.title)}">
+            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260519-deep-quiz-v1" alt="${escapeAttr(step.title)}">
             ${planOverlay(planForDisplay())}
             <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
         </div>
@@ -139,7 +139,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260519-ai-logic-v1" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260519-deep-quiz-v1" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -151,7 +151,8 @@ function goalStep(step) {
 }
 
 function nativeChoiceStep(step) {
-    if (!state.onboarding[step.id] && state.customDrawerStepId !== step.id) {
+    const loading = choiceStepLoading(step);
+    if (!loading && !state.onboarding[step.id] && state.customDrawerStepId !== step.id) {
         state.onboarding[step.id] = choiceOptionValue(step, 0);
     }
     const selected = state.onboarding[step.id] || "";
@@ -190,13 +191,13 @@ function nativeChoiceStep(step) {
     return `
         <header class="native-question-header">
             <button id="back" class="native-back-button" type="button" aria-label="Назад"></button>
-            <div class="native-progress"><span style="width: ${step.progress}px"></span></div>
+            <div class="native-progress"><span style="width: ${progressForStep(step)}px"></span></div>
         </header>
         <section class="native-question-copy">
             <h1>${escapeHtml(step.title)}</h1>
             <p>${escapeHtml(step.subtitle)}</p>
         </section>
-        ${drawerOpen ? `
+        ${loading ? choiceLoadingCards(step) : drawerOpen ? `
             <section class="native-choice-list native-custom-panel ${draft.trim() ? "has-value" : ""}">
                 <button id="custom-drawer-close" class="native-custom-close-hit-area" type="button" aria-label="Закрыть свой вариант"></button>
                 <span>${escapeHtml(customDrawerTitle(step))}</span>
@@ -232,9 +233,49 @@ function nativeChoiceStep(step) {
                     <span class="native-custom-divider"></span>
                 </button>
             ` : ""}
-            <button id="next" class="native-next-button" type="button" ${canContinue(step) ? "" : "disabled"}>${escapeHtml(step.button)}</button>
+            <button id="next" class="native-next-button" type="button" ${!loading && canContinue(step) ? "" : "disabled"}>${escapeHtml(step.button)}</button>
         </footer>
     `;
+}
+
+function choiceStepLoading(step) {
+    if (!step || !["experience", "conditions"].includes(step.id)) {
+        return false;
+    }
+    if (state.choiceTouched[step.id]) {
+        return false;
+    }
+    if (state.savingStepId === step.id) {
+        return true;
+    }
+    if (!state.suggestionsLoading && !state.suggestionsRequest) {
+        return false;
+    }
+    return state.suggestionsKey !== currentSuggestionsKey();
+}
+
+function choiceLoadingCards(step) {
+    return `
+        <section class="native-choice-list is-loading" aria-live="polite" aria-label="${escapeAttr(step.title)}">
+            ${[0, 1, 2, 3].map(() => `
+                <article class="native-choice-card native-choice-card-loading">
+                    <span class="native-choice-text">
+                        <strong><span class="ai-suggestions-spinner" aria-hidden="true"></span> Генерируем вариант</strong>
+                        <span>Подстраиваем ответ под твою цель и прошлый выбор.</span>
+                    </span>
+                    <span class="native-radio" aria-hidden="true"></span>
+                </article>
+            `).join("")}
+        </section>
+    `;
+}
+
+function progressForStep(step) {
+    const depth = state.choiceDepth[step.id] || 0;
+    if (step.id === "experience" || step.id === "conditions") {
+        return Math.min(172, step.progress + depth * 17);
+    }
+    return step.progress;
 }
 
 function choiceOptions(step) {
@@ -275,10 +316,10 @@ function customChoiceDescription(value) {
 
 function chooseGoalArt(index) {
     return [
-        "/Choose%20the%20Goal.svg?v=20260519-ai-logic-v1",
-        "/Choose%20the%20Goal-2.svg?v=20260519-ai-logic-v1",
-        "/Choose%20the%20Goal-3.svg?v=20260519-ai-logic-v1"
-    ][index] || "/Choose%20the%20Goal.svg?v=20260519-ai-logic-v1";
+        "/Choose%20the%20Goal.svg?v=20260519-deep-quiz-v1",
+        "/Choose%20the%20Goal-2.svg?v=20260519-deep-quiz-v1",
+        "/Choose%20the%20Goal-3.svg?v=20260519-deep-quiz-v1"
+    ][index] || "/Choose%20the%20Goal.svg?v=20260519-deep-quiz-v1";
 }
 
 function goalOptions(step) {
@@ -361,11 +402,11 @@ function planMilestonesForDisplay(plan) {
 }
 
 function planForDisplay() {
-    if (state.planChanged && state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan") {
-        return adjustedPlanForDisplay(state.onboarding.selectedPlan);
-    }
     if (state.suggestions.plan && Array.isArray(state.suggestions.plan.milestones) && suggestionsMatchCurrentGoal()) {
         return state.suggestions.plan;
+    }
+    if (state.planChanged && state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan") {
+        return adjustedPlanForDisplay(state.onboarding.selectedPlan);
     }
     const goal = (state.onboarding.goal || "цели").trim();
     return {
@@ -401,7 +442,9 @@ function adjustedPlanForDisplay(correction) {
 
 function textSuggestions(kind, suggestions, targetId) {
     const clean = [...new Set((suggestions || []).map((item) => String(item || "").trim()).filter(Boolean))].slice(0, 3);
-    const loading = kind === "goal" && state.suggestionsLoading && (state.onboarding.goal || "").trim().length >= 24;
+    const loading = state.suggestionsLoading
+        && (state.onboarding.goal || "").trim().length >= 24
+        && ["goal", "native-custom", "plan-correction"].includes(kind);
     if (!clean.length && !loading) {
         return "";
     }
@@ -510,12 +553,11 @@ function customDrawerTitle(step) {
 }
 
 function suggestionsMatchCurrentGoal() {
-    const savedGoal = (state.suggestionsKey || "").split("|")[0] || "";
-    return savedGoal === (state.onboarding.goal || "").trim();
+    return state.suggestionsKey === currentSuggestionsKey();
 }
 
 function choiceTextHints(step) {
-    return choiceOptions(step).map((option) => `${option.title}. ${option.description}`);
+    return choiceOptions(step).map((option) => clipHint(option.title || option.description, 58));
 }
 
 function planCorrectionHints() {

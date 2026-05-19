@@ -28,7 +28,7 @@ import java.util.Map;
 public final class AiSuggestionService {
     private static final String DEFAULT_BASE_URL = "https://api.aitunnel.ru/v1";
     private static final String DEFAULT_MODEL = "gpt-4o-mini";
-    private static final String PROMPT_VERSION = "20260519-ai-goal-architect-v1";
+    private static final String PROMPT_VERSION = "20260519-ai-deep-quiz-v1";
 
     private final Json json;
     private final UserStore userStore;
@@ -125,13 +125,16 @@ public final class AiSuggestionService {
                 User seed: %s
                 Цель пользователя: %s
                 Опыт: %s
+                Уже выбранные уточнения опыта: %s
                 Условия: %s
+                Уже выбранные уточнения условий: %s
                 Выбранная цель-карточка: %s
                 Запрос на изменение плана: %s
 
                 Сгенерируй варианты так, чтобы они выглядели как реальные ответы в онбординге, а не как общая статья.
-                experience: 4 разных варианта про стартовый уровень и прошлые попытки. Не повторяй цель в каждом описании.
-                conditions: 4 разных варианта про время, ограничения, поддержку, среду или темп. Не делай все варианты про "гибкость".
+                Если в "уже выбранных уточнениях" есть ответы, НЕ повторяй их. Сгенерируй следующий более глубокий вопрос-слой: варианты должны уточнять причины, частоту, ограничения, мотивацию или удобный темп.
+                experience: 4 коротких готовых ответа про стартовый уровень и прошлые попытки. Если история опыта уже есть, углуби выбранную ветку.
+                conditions: 4 коротких готовых ответа про время, ограничения, поддержку, среду или темп. Если история условий уже есть, углуби выбранную ветку.
                 Каждый выбранный вариант должен помогать потом построить конкретный путь: частота действий, запасной сценарий, проверка прогресса, поддержка.
                 Для goals.title пиши короткую готовую цель до 34 символов, без двоеточий, без пояснений и без "Добавить...".
                 Примеры goals.title: "Набрать 5 кг мышц", "Сбросить 5 кг", "Учить английский 30 минут".
@@ -147,7 +150,9 @@ public final class AiSuggestionService {
                 shortHash(user.storageId()),
                 clip(onboarding.goal(), 500),
                 clip(onboarding.experience(), 260),
+                clip(onboarding.experienceHistory(), 420),
                 clip(onboarding.conditions(), 260),
+                clip(onboarding.conditionsHistory(), 420),
                 clip(onboarding.selectedGoal(), 220),
                 clip(onboarding.selectedPlan(), 320)
         );
@@ -173,15 +178,40 @@ public final class AiSuggestionService {
             default -> "устойчивый ритм";
         };
         return new SuggestionsResponse(
-                fallbackExperience(goal),
-                fallbackConditions(goal),
+                fallbackExperience(goal, onboarding.experienceHistory()),
+                fallbackConditions(goal, onboarding.conditionsHistory()),
                 fallbackGoals(goal, focus),
                 fallbackPlan(goal, focus),
                 "fallback"
         );
     }
 
-    private List<ChoiceSuggestion> fallbackExperience(String goal) {
+    private List<ChoiceSuggestion> fallbackExperience(String goal, String history) {
+        if (!history.isBlank()) {
+            String lowerHistory = history.toLowerCase();
+            if (lowerHistory.matches(".*(нул|мало|начина).*")) {
+                return List.of(
+                        new ChoiceSuggestion("Нужен лёгкий старт", "Готов начинать с маленьких действий 10-15 минут."),
+                        new ChoiceSuggestion("Важна структура", "Проще идти, когда есть расписание и понятные проверки."),
+                        new ChoiceSuggestion("Боюсь сорваться", "Нужен запасной минимум на дни без сил и времени."),
+                        new ChoiceSuggestion("Хочу поддержку", "Помогут подсказки, напоминания и внешняя обратная связь.")
+                );
+            }
+            if (lowerHistory.matches(".*(рывк|срыв|нестаб|перерыв).*")) {
+                return List.of(
+                        new ChoiceSuggestion("Теряю регулярность", "Начинаю активно, но через неделю темп падает."),
+                        new ChoiceSuggestion("Мешает перегруз", "Слишком большой план быстро становится тяжёлым."),
+                        new ChoiceSuggestion("Не вижу прогресс", "Нужна простая метрика, чтобы понимать результат."),
+                        new ChoiceSuggestion("Нет проверки", "Поможет еженедельный разбор и корректировка шагов.")
+                );
+            }
+            return List.of(
+                    new ChoiceSuggestion("Нужна конкретика", "Хочу точные действия, частоту и критерий выполнения."),
+                    new ChoiceSuggestion("Нужен ритм", "Лучше двигаюсь, когда есть повторяемые короткие шаги."),
+                    new ChoiceSuggestion("Нужна проверка", "Важно видеть, что работает, и вовремя менять план."),
+                    new ChoiceSuggestion("Нужен запас", "План должен иметь лёгкую версию на сложные дни.")
+            );
+        }
         String lower = goal.toLowerCase();
         if (lower.matches(".*(девуш|подруг|знаком|отношен|свидан).*")) {
             return List.of(
@@ -199,7 +229,32 @@ public final class AiSuggestionService {
         );
     }
 
-    private List<ChoiceSuggestion> fallbackConditions(String goal) {
+    private List<ChoiceSuggestion> fallbackConditions(String goal, String history) {
+        if (!history.isBlank()) {
+            String lowerHistory = history.toLowerCase();
+            if (lowerHistory.matches(".*(врем|график|занят).*")) {
+                return List.of(
+                        new ChoiceSuggestion("2-3 окна в неделю", "Реально выделять несколько коротких слотов заранее."),
+                        new ChoiceSuggestion("Нужен минимум", "На загруженный день нужен шаг на 5-10 минут."),
+                        new ChoiceSuggestion("Лучше вечером", "Основные действия проще делать после дел или учёбы."),
+                        new ChoiceSuggestion("Лучше утром", "Нужно ставить важные действия до начала дня.")
+                );
+            }
+            if (lowerHistory.matches(".*(поддерж|люд|окруж|команд).*")) {
+                return List.of(
+                        new ChoiceSuggestion("Нужен человек", "Поможет один человек для отчёта и поддержки."),
+                        new ChoiceSuggestion("Нужны напоминания", "Важно не держать план в голове, а видеть подсказки."),
+                        new ChoiceSuggestion("Нужна среда", "Нужно заранее подготовить место, материалы и условия."),
+                        new ChoiceSuggestion("Меньше давления", "Поддержка должна помогать, а не создавать чувство вины.")
+                );
+            }
+            return List.of(
+                    new ChoiceSuggestion("Короткие шаги", "План должен помещаться в обычный день без перегруза."),
+                    new ChoiceSuggestion("Гибкий график", "Нужны варианты на обычный и сложный день."),
+                    new ChoiceSuggestion("Понятная метрика", "Важно быстро видеть, есть ли движение к цели."),
+                    new ChoiceSuggestion("Внешняя опора", "Помогут люди, места, напоминания или готовая среда.")
+            );
+        }
         String lower = goal.toLowerCase();
         if (lower.matches(".*(девуш|подруг|знаком|отношен|свидан).*")) {
             return List.of(
@@ -296,7 +351,7 @@ public final class AiSuggestionService {
     }
 
     private String fingerprint(String userId, OnboardingData onboarding) {
-        return shortHash(PROMPT_VERSION + "|" + userId + "|" + onboarding.goal() + "|" + onboarding.experience() + "|" + onboarding.conditions() + "|" + onboarding.selectedGoal() + "|" + onboarding.selectedPlan());
+        return shortHash(PROMPT_VERSION + "|" + userId + "|" + onboarding.goal() + "|" + onboarding.experience() + "|" + onboarding.conditions() + "|" + onboarding.experienceHistory() + "|" + onboarding.conditionsHistory() + "|" + onboarding.selectedGoal() + "|" + onboarding.selectedPlan());
     }
 
     private String shortHash(String value) {

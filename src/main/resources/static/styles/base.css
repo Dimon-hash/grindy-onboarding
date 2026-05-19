@@ -44,9 +44,9 @@ button {
 }
 
 .ai-text-suggestions {
-    display: flex;
+    display: grid;
     gap: 8px;
-    overflow-x: auto;
+    overflow: visible;
     padding: 2px 0 6px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
@@ -57,18 +57,18 @@ button {
 }
 
 .ai-text-suggestion {
-    flex: 0 0 auto;
-    max-width: 238px;
-    min-height: 34px;
-    padding: 8px 12px;
-    border-radius: 999px;
+    width: fit-content;
+    max-width: min(310px, 100%);
+    min-height: 30px;
+    padding: 7px 10px;
+    border-radius: 12px;
     background: rgba(0, 86, 249, 0.08);
     color: var(--blue);
-    font-size: 13px;
+    font-size: 12px;
     line-height: 130%;
     font-weight: 700;
     text-align: left;
-    white-space: nowrap;
+    white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
     cursor: pointer;

@@ -1,8 +1,16 @@
 package com.foscar.grindy.onboarding;
 
-public record OnboardingData(String goal, String experience, String conditions, String selectedGoal, String selectedPlan) {
+public record OnboardingData(
+        String goal,
+        String experience,
+        String conditions,
+        String experienceHistory,
+        String conditionsHistory,
+        String selectedGoal,
+        String selectedPlan
+) {
     public static OnboardingData empty() {
-        return new OnboardingData("", "", "", "", "");
+        return new OnboardingData("", "", "", "", "", "", "");
     }
 
     public OnboardingData normalized() {
@@ -10,6 +18,8 @@ public record OnboardingData(String goal, String experience, String conditions, 
                 clean(goal, 500),
                 clean(experience, 320),
                 clean(conditions, 320),
+                clean(experienceHistory, 500),
+                clean(conditionsHistory, 500),
                 clean(selectedGoal, 180),
                 clean(selectedPlan, 500)
         );

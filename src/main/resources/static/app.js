@@ -1,6 +1,6 @@
 import {CUSTOM_VALUE} from "./js/config.js";
 import {steps} from "./js/steps.js";
-import {nodes, state} from "./js/state.js";
+import {currentSuggestionsKey, nodes, state} from "./js/state.js";
 import {ApiError, authenticate, loadCurrentUser, loadOnboardingSuggestions, saveOnboarding} from "./js/api.js";
 import {initTelegram, syncTheme, telegram} from "./js/telegram.js";
 import {goalTextHints, renderStep} from "./js/screens.js";
@@ -70,6 +70,8 @@ function loadFromUser() {
     ["experience", "conditions"].forEach((key) => {
         const step = steps.find((item) => item.id === key);
         const value = state.onboarding[key];
+        state.choiceHistory[key] = splitHistory(state.onboarding[`${key}History`]);
+        state.choiceDepth[key] = state.choiceHistory[key].length;
         if (step && value && value !== CUSTOM_VALUE) {
             state.choiceTouched[key] = true;
             state.choiceSnapshots[key] = effectiveOptions(step);
@@ -230,7 +232,13 @@ function resetChoiceLocksForNewGoal() {
     ["experience", "conditions"].forEach((id) => {
         state.choiceTouched[id] = false;
         state.choiceSnapshots[id] = [];
+        state.choiceDepth[id] = 0;
+        state.choiceHistory[id] = [];
+        state.onboarding[id] = "";
+        state.onboarding[`${id}History`] = "";
     });
+    state.onboarding.selectedGoal = "";
+    state.onboarding.selectedPlan = "";
 }
 
 function bindCustomInput(step) {
@@ -373,7 +381,7 @@ function bindPlanActions() {
 
     const save = document.getElementById("plan-correction-save");
     if (save) {
-        save.addEventListener("click", () => {
+        save.addEventListener("click", async () => {
             const draft = state.planDraft.trim();
             if (!draft) {
                 return;
@@ -383,6 +391,8 @@ function bindPlanActions() {
             state.planChanged = true;
             state.planCorrectionOpen = false;
             autosave();
+            render();
+            await refreshSuggestions({renderAfter: false, force: true});
             render();
         });
     }
@@ -504,6 +514,7 @@ function commitCustomDrawer(step) {
     state.choiceTouched[step.id] = true;
     state.choiceSnapshots[step.id] = effectiveOptions(step);
     state.onboarding[step.id] = draft;
+    state.customDrafts[step.id] = "";
     state.customDrawerStepId = "";
     autosave();
     render();
@@ -520,6 +531,14 @@ async function nextStep() {
     }
     state.isAdvancing = true;
     blurActiveControl();
+    if (shouldDeepenChoice(step)) {
+        await deepenChoiceStep(step);
+        state.isAdvancing = false;
+        return;
+    }
+    if (["experience", "conditions"].includes(step.id)) {
+        finalizeChoiceStep(step);
+    }
     if (["goal", "experience", "conditions"].includes(step.id)) {
         queueImmediateSuggestionsRefresh();
     }
@@ -607,6 +626,75 @@ function goTo(index) {
     render();
 }
 
+async function deepenChoiceStep(step) {
+    const selected = choiceTitleFromValue(state.onboarding[step.id]);
+    if (!selected) {
+        return;
+    }
+    const history = state.choiceHistory[step.id] || [];
+    if (!history.includes(selected)) {
+        history.push(selected);
+    }
+    state.choiceHistory[step.id] = history.slice(0, 3);
+    state.choiceDepth[step.id] = state.choiceHistory[step.id].length;
+    state.onboarding[`${step.id}History`] = state.choiceHistory[step.id].join(" | ");
+    state.onboarding[step.id] = "";
+    state.choiceTouched[step.id] = false;
+    state.choiceSnapshots[step.id] = [];
+    state.customDrawerStepId = "";
+    state.savingStepId = step.id;
+    render();
+    try {
+        await saveOnboardingWithTimeout();
+    } catch (error) {
+        handleBackgroundSaveError(error);
+    }
+    state.savingStepId = "";
+    await refreshSuggestions({renderAfter: true, force: true});
+}
+
+function finalizeChoiceStep(step) {
+    const selected = choiceTitleFromValue(state.onboarding[step.id]);
+    if (!selected) {
+        return;
+    }
+    const history = state.choiceHistory[step.id] || [];
+    if (!history.includes(selected)) {
+        history.push(selected);
+    }
+    state.choiceHistory[step.id] = history.slice(-3);
+    state.choiceDepth[step.id] = Math.max(state.choiceDepth[step.id] || 0, state.choiceHistory[step.id].length);
+    state.onboarding[`${step.id}History`] = state.choiceHistory[step.id].join(" | ");
+}
+
+function shouldDeepenChoice(step) {
+    if (!step || !["experience", "conditions"].includes(step.id)) {
+        return false;
+    }
+    if (state.customDrawerStepId === step.id || isCustomStepValue(step, state.onboarding[step.id]) && !isSavedChoiceValue(state.onboarding[step.id])) {
+        return false;
+    }
+    const depth = state.choiceDepth[step.id] || 0;
+    return depth < desiredChoiceDepth(step.id);
+}
+
+function desiredChoiceDepth(stepId) {
+    const goal = (state.onboarding.goal || "").trim();
+    const preciseGoal = goal.length >= 150 && /\d|месяц|недел|день|кг|раз|час|минут/i.test(goal);
+    if (stepId === "experience") {
+        return preciseGoal ? 1 : 2;
+    }
+    return preciseGoal ? 1 : 2;
+}
+
+function splitHistory(value) {
+    return String(value || "")
+        .split("|")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .slice(0, 3);
+}
+
 function autosave() {
     window.clearTimeout(autosave.timer);
     autosave.timer = window.setTimeout(() => {
@@ -637,12 +725,12 @@ function saveOnboardingWithTimeout() {
     ]);
 }
 
-async function refreshSuggestions({renderAfter = true} = {}) {
+async function refreshSuggestions({renderAfter = true, force = false} = {}) {
     if ((state.onboarding.goal || "").trim().length < 24) {
         return;
     }
-    const requestKey = suggestionsKey();
-    if (state.suggestionsKey === requestKey && state.suggestions.goals.length) {
+    const requestKey = currentSuggestionsKey();
+    if (!force && state.suggestionsKey === requestKey && state.suggestions.goals.length) {
         return;
     }
     if (state.suggestionsRequest) {
@@ -724,13 +812,7 @@ function shouldReplaceGeneratedChoice(step, value, id) {
 }
 
 function suggestionsKey() {
-    return [
-        state.onboarding.goal || "",
-        state.onboarding.experience || "",
-        state.onboarding.conditions || "",
-        state.onboarding.selectedGoal || "",
-        state.onboarding.selectedPlan || ""
-    ].map((value) => value.trim()).join("|");
+    return currentSuggestionsKey();
 }
 
 function handleBackgroundSaveError(error) {
