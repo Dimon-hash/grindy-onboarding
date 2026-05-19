@@ -30,15 +30,19 @@ import java.util.Map;
  */
 public final class AiSuggestionService {
     private static final String DEFAULT_BASE_URL = "https://api.aitunnel.ru/v1";
-    private static final String DEFAULT_MODEL = "gpt-4o-mini";
-    private static final String PROMPT_VERSION = "20260519-ai-deep-quiz-v1";
+    private static final String DEFAULT_LIGHT_MODEL = "gpt-4o-mini";
+    private static final String DEFAULT_STANDARD_MODEL = "gpt-4o-mini";
+    private static final String DEFAULT_STRONG_MODEL = "gpt-4o";
+    private static final String PROMPT_VERSION = "20260519-ai-model-router-v1";
 
     private final Json json;
     private final UserStore userStore;
     private final HttpClient httpClient;
     private final String apiKey;
     private final String baseUrl;
-    private final String model;
+    private final String lightModel;
+    private final String standardModel;
+    private final String strongModel;
 
     public AiSuggestionService(Json json, UserStore userStore) {
         this.json = json;
@@ -46,7 +50,9 @@ public final class AiSuggestionService {
         this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(12)).build();
         this.apiKey = firstEnv("GRINDY_AI_API_KEY", "AITUNNEL_API_KEY");
         this.baseUrl = System.getenv().getOrDefault("GRINDY_AI_BASE_URL", DEFAULT_BASE_URL).replaceAll("/+$", "");
-        this.model = System.getenv().getOrDefault("GRINDY_AI_MODEL", DEFAULT_MODEL);
+        this.lightModel = firstEnvWithFallback(DEFAULT_LIGHT_MODEL, "GRINDY_AI_MODEL_LIGHT", "GRINDY_AI_MODEL");
+        this.standardModel = firstEnvWithFallback(DEFAULT_STANDARD_MODEL, "GRINDY_AI_MODEL_STANDARD", "GRINDY_AI_MODEL");
+        this.strongModel = firstEnvWithFallback(DEFAULT_STRONG_MODEL, "GRINDY_AI_MODEL_STRONG");
     }
 
     public SuggestionsResponse suggestions(UserContext user, OnboardingData onboarding) throws IOException {
@@ -57,17 +63,18 @@ public final class AiSuggestionService {
             return completeWithFallback(cached.suggestions(), fallback(user, clean), cached.suggestions().source());
         }
 
-        SuggestionsResponse suggestions = generate(user, clean).normalized(null);
+        ModelRoute route = routeFor(clean);
+        SuggestionsResponse suggestions = generate(user, clean, route).normalized(null);
         userStore.saveSuggestions(user.storageId(), new CachedSuggestions(fingerprint, suggestions));
         return suggestions;
     }
 
-    private SuggestionsResponse generate(UserContext user, OnboardingData onboarding) {
+    private SuggestionsResponse generate(UserContext user, OnboardingData onboarding, ModelRoute route) {
         if (apiKey.isBlank()) {
             return fallback(user, onboarding);
         }
         try {
-            SuggestionsResponse ai = callModel(user, onboarding);
+            SuggestionsResponse ai = callModel(user, onboarding, route);
             return completeWithFallback(ai, fallback(user, onboarding), "ai");
         } catch (Exception error) {
             System.err.println("AI suggestions fallback: " + error.getMessage());
@@ -75,14 +82,14 @@ public final class AiSuggestionService {
         }
     }
 
-    private SuggestionsResponse callModel(UserContext user, OnboardingData onboarding) throws IOException, InterruptedException {
+    private SuggestionsResponse callModel(UserContext user, OnboardingData onboarding, ModelRoute route) throws IOException, InterruptedException {
         Map<String, Object> requestBody = Map.of(
-                "model", model,
+                "model", route.model(),
                 "temperature", 0.58,
                 "response_format", Map.of("type", "json_object"),
                 "messages", List.of(
                         Map.of("role", "system", "content", systemPrompt()),
-                        Map.of("role", "user", "content", userPrompt(user, onboarding))
+                        Map.of("role", "user", "content", userPrompt(user, onboarding, route))
                 )
         );
         HttpRequest request = HttpRequest.newBuilder()
@@ -124,10 +131,12 @@ public final class AiSuggestionService {
                 """;
     }
 
-    private String userPrompt(UserContext user, OnboardingData onboarding) {
+    private String userPrompt(UserContext user, OnboardingData onboarding, ModelRoute route) {
         // История уточнений передаётся отдельно: так модель понимает, какой следующий слой вопроса нужен.
         return """
                 User seed: %s
+                AI route: %s
+                Причина выбора модели: %s
                 Цель пользователя: %s
                 Опыт: %s
                 Уже выбранные уточнения опыта: %s
@@ -153,6 +162,8 @@ public final class AiSuggestionService {
                 Обязательные этапы плана: уточнение метрики, первая неделя, регулярное действие, среда/поддержка, проверка прогресса, запасной сценарий, усиление, закрепление.
                 """.formatted(
                 shortHash(user.storageId()),
+                route.tier(),
+                route.reason(),
                 clip(onboarding.goal(), 500),
                 clip(onboarding.experience(), 260),
                 clip(onboarding.experienceHistory(), 420),
@@ -161,6 +172,21 @@ public final class AiSuggestionService {
                 clip(onboarding.selectedGoal(), 220),
                 clip(onboarding.selectedPlan(), 320)
         );
+    }
+
+    private ModelRoute routeFor(OnboardingData onboarding) {
+        String goal = onboarding.goal().toLowerCase();
+        boolean finalPlan = !onboarding.selectedGoal().isBlank() || !onboarding.selectedPlan().isBlank();
+        boolean hasDeepContext = !onboarding.experienceHistory().isBlank() && !onboarding.conditionsHistory().isBlank();
+        boolean complexGoal = onboarding.goal().length() >= 180
+                || goal.matches(".*(здоров|похуд|вес|псих|отношен|девуш|деньг|бизнес|работ|переезд|экзамен).*");
+        if (finalPlan || complexGoal && hasDeepContext) {
+            return new ModelRoute("strong", strongModel, "финальный план или сложная цель требуют более сильной модели");
+        }
+        if (hasDeepContext || onboarding.goal().length() >= 90) {
+            return new ModelRoute("standard", standardModel, "есть достаточно контекста для обычной персонализации");
+        }
+        return new ModelRoute("light", lightModel, "ранний быстрый слой подсказок без дорогого рассуждения");
     }
 
     private SuggestionsResponse completeWithFallback(SuggestionsResponse ai, SuggestionsResponse fallback, String source) {
@@ -357,7 +383,7 @@ public final class AiSuggestionService {
     }
 
     private String fingerprint(String userId, OnboardingData onboarding) {
-        return shortHash(PROMPT_VERSION + "|" + userId + "|" + onboarding.goal() + "|" + onboarding.experience() + "|" + onboarding.conditions() + "|" + onboarding.experienceHistory() + "|" + onboarding.conditionsHistory() + "|" + onboarding.selectedGoal() + "|" + onboarding.selectedPlan());
+        return shortHash(PROMPT_VERSION + "|" + routeFor(onboarding).tier() + "|" + userId + "|" + onboarding.goal() + "|" + onboarding.experience() + "|" + onboarding.conditions() + "|" + onboarding.experienceHistory() + "|" + onboarding.conditionsHistory() + "|" + onboarding.selectedGoal() + "|" + onboarding.selectedPlan());
     }
 
     private String shortHash(String value) {
@@ -391,5 +417,13 @@ public final class AiSuggestionService {
             }
         }
         return "";
+    }
+
+    private static String firstEnvWithFallback(String fallback, String... names) {
+        String value = firstEnv(names);
+        return value.isBlank() ? fallback : value;
+    }
+
+    private record ModelRoute(String tier, String model, String reason) {
     }
 }
