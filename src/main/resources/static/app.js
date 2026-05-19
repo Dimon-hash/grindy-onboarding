@@ -4,7 +4,7 @@ import {currentSuggestionsKey, nodes, state} from "./js/state.js";
 import {ApiError, authenticate, loadCurrentUser, loadOnboardingSuggestions, saveOnboarding} from "./js/api.js";
 import {initTelegram, syncTheme, telegram} from "./js/telegram.js";
 import {goalTextHints, renderStep} from "./js/screens.js";
-import {canContinue, choiceOptionValue, effectiveOptions, isCustomStepValue, isSavedChoiceValue} from "./js/validators.js";
+import {canContinue, choiceOptionValue, choiceTitleFromValue, effectiveOptions, isCustomStepValue, isSavedChoiceValue} from "./js/validators.js";
 import {wait} from "./js/utils.js";
 
 // Main frontend controller: boots Telegram, renders steps, binds UI events and syncs answers with the backend.
