@@ -242,6 +242,7 @@ function choiceStepLoading(step) {
     if (!step || !["experience", "conditions"].includes(step.id)) {
         return false;
     }
+    // Пока новый AI-набор ещё в пути, показываем skeleton-карточки вместо старых неподходящих вариантов.
     if (state.choiceTouched[step.id]) {
         return false;
     }
@@ -273,6 +274,7 @@ function choiceLoadingCards(step) {
 function progressForStep(step) {
     const depth = state.choiceDepth[step.id] || 0;
     if (step.id === "experience" || step.id === "conditions") {
+        // Дополнительные уточняющие раунды чуть двигают прогресс, чтобы экран не казался зависшим.
         return Math.min(172, step.progress + depth * 17);
     }
     return step.progress;

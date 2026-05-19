@@ -47,6 +47,7 @@ export function effectiveOptions(step) {
         return [];
     }
     const snapshot = state.choiceSnapshots && state.choiceSnapshots[step.id];
+    // После выбора фиксируем текущие варианты, чтобы пришедший позже AI-ответ не заменил выбранную карточку.
     if (state.choiceTouched && state.choiceTouched[step.id] && Array.isArray(snapshot) && snapshot.length) {
         return snapshot;
     }

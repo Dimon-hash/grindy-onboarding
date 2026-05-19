@@ -100,6 +100,7 @@ public final class AiSuggestionService {
     }
 
     private String systemPrompt() {
+        // System prompt задаёт роль модели и жёсткую JSON-схему, чтобы фронт мог безопасно рисовать ответ.
         return """
                 Ты не просто чат-бот, а AI-архитектор цели внутри приложения Grindy.
                 Твоя задача: превратить сырой запрос пользователя в ясную цель, собрать недостающий контекст и построить персональный путь.
@@ -121,6 +122,7 @@ public final class AiSuggestionService {
     }
 
     private String userPrompt(UserContext user, OnboardingData onboarding) {
+        // История уточнений передаётся отдельно: так модель понимает, какой следующий слой вопроса нужен.
         return """
                 User seed: %s
                 Цель пользователя: %s
@@ -187,6 +189,7 @@ public final class AiSuggestionService {
     }
 
     private List<ChoiceSuggestion> fallbackExperience(String goal, String history) {
+        // Fallback тоже учитывает историю, чтобы приложение оставалось полезным даже без ответа AI-провайдера.
         if (!history.isBlank()) {
             String lowerHistory = history.toLowerCase();
             if (lowerHistory.matches(".*(нул|мало|начина).*")) {

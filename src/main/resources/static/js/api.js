@@ -32,6 +32,7 @@ export async function loadOnboardingSuggestions() {
         method: "POST",
         body: {
             ...state.onboarding,
+            // В UI значения хранятся как "Название-0", а модели нужен чистый человеческий текст.
             experience: readableChoiceValue(state.onboarding.experience),
             conditions: readableChoiceValue(state.onboarding.conditions),
             selectedGoal: readableChoiceValue(state.onboarding.selectedGoal),

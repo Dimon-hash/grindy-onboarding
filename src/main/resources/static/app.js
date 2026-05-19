@@ -631,6 +631,7 @@ async function deepenChoiceStep(step) {
     if (!selected) {
         return;
     }
+    // Пользователь остаётся на том же вопросе, но выбранный ответ уходит в историю для следующего AI-раунда.
     const history = state.choiceHistory[step.id] || [];
     if (!history.includes(selected)) {
         history.push(selected);
@@ -658,6 +659,7 @@ function finalizeChoiceStep(step) {
     if (!selected) {
         return;
     }
+    // Последний выбранный ответ тоже добавляем в историю, чтобы финальный план видел весь путь уточнений.
     const history = state.choiceHistory[step.id] || [];
     if (!history.includes(selected)) {
         history.push(selected);
@@ -671,6 +673,7 @@ function shouldDeepenChoice(step) {
     if (!step || !["experience", "conditions"].includes(step.id)) {
         return false;
     }
+    // Свой текст считается достаточно точным ответом: его не гоняем через дополнительные карточки.
     if (state.customDrawerStepId === step.id || isCustomStepValue(step, state.onboarding[step.id]) && !isSavedChoiceValue(state.onboarding[step.id])) {
         return false;
     }
@@ -730,6 +733,7 @@ async function refreshSuggestions({renderAfter = true, force = false} = {}) {
         return;
     }
     const requestKey = currentSuggestionsKey();
+    // Кешируем AI-ответы по контексту, чтобы не менять варианты без реального нового ввода.
     if (!force && state.suggestionsKey === requestKey && state.suggestions.goals.length) {
         return;
     }

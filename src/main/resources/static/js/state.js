@@ -28,10 +28,12 @@ export const state = {
         goals: [],
         plan: null
     },
+    // Сколько дополнительных уточняющих раундов уже прошёл пользователь на карточках.
     choiceDepth: {
         experience: 0,
         conditions: 0
     },
+    // История выбранных ответов нужна ИИ, чтобы следующий набор вариантов углублял контекст, а не повторялся.
     choiceHistory: {
         experience: [],
         conditions: []
@@ -69,6 +71,7 @@ export const nodes = {
     onboardingWizard: document.getElementById("onboarding-wizard")
 };
 
+// Единый ключ контекста: если он не менялся, можно не перегенерировать AI-подсказки.
 export function currentSuggestionsKey() {
     return [
         state.onboarding.goal || "",
