@@ -1,5 +1,6 @@
 import {state} from "./state.js";
 
+// Browser API client used by the static mini app.
 export class ApiError extends Error {
     constructor(status, body) {
         super(body || `Request failed with status ${status}`);

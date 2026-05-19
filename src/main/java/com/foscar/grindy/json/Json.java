@@ -8,6 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Small Jackson wrapper so JSON parsing/serialization settings stay in one place.
+ */
 public final class Json {
     private final ObjectMapper mapper;
 

@@ -1,3 +1,4 @@
+// Global frontend constants and local cache invalidation for static assets/state.
 export const CUSTOM_VALUE = "__custom__";
 export const APP_VERSION = "20260519-deep-quiz-v1";
 

@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Routes /api requests to ApiHandler and everything else to static files.
+ */
 public final class RequestDispatcher {
     private RequestDispatcher() {
     }

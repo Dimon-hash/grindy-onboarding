@@ -5,6 +5,9 @@ import com.foscar.grindy.onboarding.OnboardingData;
 
 import java.time.Instant;
 
+/**
+ * Profile shape returned to the mini app after auth and onboarding saves.
+ */
 public record UserProfile(
         String id,
         String telegramId,

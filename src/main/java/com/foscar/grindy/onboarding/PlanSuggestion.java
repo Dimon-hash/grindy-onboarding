@@ -2,6 +2,9 @@ package com.foscar.grindy.onboarding;
 
 import java.util.List;
 
+/**
+ * Generated plan summary and ordered milestones for the final screen.
+ */
 public record PlanSuggestion(String title, String summary, List<MilestoneSuggestion> milestones) {
     public static PlanSuggestion fallback() {
         return new PlanSuggestion(

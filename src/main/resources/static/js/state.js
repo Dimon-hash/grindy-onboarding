@@ -1,6 +1,7 @@
 import {resetStoredUiVersion} from "./config.js";
 import {normalizeStep} from "./utils.js";
 
+// Shared mutable UI state for the whole onboarding flow.
 resetStoredUiVersion();
 
 export const state = {

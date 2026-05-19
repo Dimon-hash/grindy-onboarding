@@ -3,6 +3,7 @@ import {currentSuggestionsKey, state} from "./state.js";
 import {canContinue, choiceOptionValue, choiceTitleFromValue, effectiveOptions, isCustomStepValue, isSavedChoiceValue} from "./validators.js";
 import {escapeAttr, escapeHtml} from "./utils.js";
 
+// Pure render helpers: each function returns HTML for one onboarding screen or reusable UI block.
 export function renderStep(step) {
     if (step.type === "loader") {
         return `

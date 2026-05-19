@@ -1,3 +1,4 @@
+/* Shared foundation: fonts, color tokens, app sizing, buttons, text suggestions and phone shell. */
 @import url("https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap");
 
 :root {

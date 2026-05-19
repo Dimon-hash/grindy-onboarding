@@ -1,5 +1,8 @@
 package com.foscar.grindy.onboarding;
 
+/**
+ * Persisted onboarding answers; history fields store the multi-round choices used for AI personalization.
+ */
 public record OnboardingData(
         String goal,
         String experience,

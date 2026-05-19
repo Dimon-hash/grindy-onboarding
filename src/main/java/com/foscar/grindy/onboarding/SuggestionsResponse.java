@@ -3,6 +3,9 @@ package com.foscar.grindy.onboarding;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Full AI suggestion payload consumed by the frontend.
+ */
 public record SuggestionsResponse(
         List<ChoiceSuggestion> experience,
         List<ChoiceSuggestion> conditions,

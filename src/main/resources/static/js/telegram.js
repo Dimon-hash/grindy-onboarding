@@ -1,3 +1,4 @@
+// Telegram Mini App adapter; every Telegram-specific call is isolated here.
 export const telegram = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 
 export function initTelegram() {

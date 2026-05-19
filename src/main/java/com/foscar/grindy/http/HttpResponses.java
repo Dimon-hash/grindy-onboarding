@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Shared HTTP response helpers with security headers applied to every response.
+ */
 final class HttpResponses {
     private HttpResponses() {
     }

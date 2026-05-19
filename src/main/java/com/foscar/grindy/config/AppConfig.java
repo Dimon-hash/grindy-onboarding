@@ -2,6 +2,9 @@ package com.foscar.grindy.config;
 
 import java.nio.file.Path;
 
+/**
+ * Runtime configuration loaded from environment variables for local/dev/server modes.
+ */
 public record AppConfig(
         int port,
         Path dataDir,

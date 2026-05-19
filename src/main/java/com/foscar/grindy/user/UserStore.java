@@ -12,6 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
+/**
+ * File-based persistence for onboarding answers and cached AI suggestions.
+ */
 public final class UserStore {
     private final Path usersDir;
     private final Json json;

@@ -1,3 +1,4 @@
+/* CSS entrypoint: imports all screen-specific style layers with cache-busting version. */
 @import url("/styles/base.css?v=20260519-deep-quiz-v1");
 @import url("/styles/native-choice.css?v=20260519-deep-quiz-v1");
 @import url("/styles/goal.css?v=20260519-deep-quiz-v1");

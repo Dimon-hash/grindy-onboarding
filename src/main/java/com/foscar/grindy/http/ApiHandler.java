@@ -14,6 +14,9 @@ import com.sun.net.httpserver.HttpExchange;
 
 import java.io.IOException;
 
+/**
+ * Handles all JSON API endpoints: auth, profile, onboarding save and AI suggestions.
+ */
 public final class ApiHandler {
     private final Json json;
     private final AuthService authService;

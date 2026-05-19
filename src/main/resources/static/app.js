@@ -7,6 +7,7 @@ import {goalTextHints, renderStep} from "./js/screens.js";
 import {canContinue, choiceOptionValue, effectiveOptions, isCustomStepValue, isSavedChoiceValue} from "./js/validators.js";
 import {wait} from "./js/utils.js";
 
+// Main frontend controller: boots Telegram, renders steps, binds UI events and syncs answers with the backend.
 initTelegram();
 bindViewport();
 setAppHeight();

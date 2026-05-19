@@ -1,5 +1,8 @@
 package com.foscar.grindy.onboarding;
 
+/**
+ * One timeline item in the generated user plan.
+ */
 public record MilestoneSuggestion(String title, String description) {
     public MilestoneSuggestion normalized() {
         return new MilestoneSuggestion(clean(title, "Этап", 40), clean(description, "Понятный следующий шаг", 170));

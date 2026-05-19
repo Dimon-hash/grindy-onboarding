@@ -2,6 +2,9 @@ package com.foscar.grindy.onboarding;
 
 import java.util.List;
 
+/**
+ * One generated goal card shown in the final goal carousel.
+ */
 public record GoalSuggestion(String duration, String title, String description, List<String> bullets, String accent) {
     public GoalSuggestion normalized() {
         return new GoalSuggestion(

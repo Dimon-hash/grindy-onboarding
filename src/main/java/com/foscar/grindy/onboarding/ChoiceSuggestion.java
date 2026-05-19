@@ -1,5 +1,8 @@
 package com.foscar.grindy.onboarding;
 
+/**
+ * One selectable card for experience/conditions steps.
+ */
 public record ChoiceSuggestion(String title, String description) {
     public ChoiceSuggestion normalized() {
         return new ChoiceSuggestion(

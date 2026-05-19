@@ -25,6 +25,9 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Generates personalized onboarding choices and plans through the AI provider, with cached fallback data.
+ */
 public final class AiSuggestionService {
     private static final String DEFAULT_BASE_URL = "https://api.aitunnel.ru/v1";
     private static final String DEFAULT_MODEL = "gpt-4o-mini";

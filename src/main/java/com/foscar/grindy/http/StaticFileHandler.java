@@ -6,6 +6,9 @@ import com.sun.net.httpserver.HttpExchange;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Serves bundled static assets from src/main/resources/static, including SPA fallback to index.html.
+ */
 public final class StaticFileHandler {
     public void handle(HttpExchange exchange, String path) throws IOException {
         String resourcePath = path;

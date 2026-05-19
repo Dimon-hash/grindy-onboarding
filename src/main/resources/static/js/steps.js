@@ -1,3 +1,4 @@
+// Ordered onboarding route definition. Numeric indexes are stored in localStorage as grindy.step.
 export const steps = [
     {id: "loader", type: "loader"},
     {id: "welcome", type: "welcome"},

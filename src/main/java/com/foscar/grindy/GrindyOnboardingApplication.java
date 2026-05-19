@@ -15,6 +15,9 @@ import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 
+/**
+ * Entry point: wires config, storage, auth, AI suggestions and the built-in HTTP server.
+ */
 public final class GrindyOnboardingApplication {
     private GrindyOnboardingApplication() {
     }

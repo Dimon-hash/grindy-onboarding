@@ -1,6 +1,7 @@
 import {CUSTOM_VALUE} from "./config.js";
 import {currentSuggestionsKey, state} from "./state.js";
 
+// Validation and option-selection helpers used before moving between onboarding steps.
 export function canContinue(step) {
     if (!step || step.type === "loader" || step.type === "welcome") {
         return true;

@@ -1,3 +1,4 @@
+// Small shared helpers used by rendering, navigation and safe HTML output.
 export function normalizeStep(step) {
     if (!Number.isFinite(step) || step < 1) {
         return 1;

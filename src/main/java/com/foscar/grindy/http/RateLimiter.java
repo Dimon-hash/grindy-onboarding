@@ -6,6 +6,9 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Tiny in-memory limiter that protects the AI endpoint from repeated rapid requests.
+ */
 final class RateLimiter {
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
     private final int maxRequests;
