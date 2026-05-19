@@ -30,10 +30,10 @@ import java.util.Map;
  */
 public final class AiSuggestionService {
     private static final String DEFAULT_BASE_URL = "https://api.aitunnel.ru/v1";
-    private static final String DEFAULT_LIGHT_MODEL = "gpt-4o-mini";
-    private static final String DEFAULT_STANDARD_MODEL = "gpt-4o-mini";
-    private static final String DEFAULT_STRONG_MODEL = "gpt-4o";
-    private static final String PROMPT_VERSION = "20260519-ai-model-router-v1";
+    private static final String DEFAULT_LIGHT_MODEL = "gpt-4.1-nano";
+    private static final String DEFAULT_STANDARD_MODEL = "gpt-4.1-mini";
+    private static final String DEFAULT_STRONG_MODEL = "gpt-4.1";
+    private static final String PROMPT_VERSION = "20260519-ai-model-router-v2";
 
     private final Json json;
     private final UserStore userStore;

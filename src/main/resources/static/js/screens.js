@@ -47,7 +47,7 @@ function genericStep(step) {
         ${step.type === "textarea" ? textareaStep(step) : choiceStep(step)}
         <footer class="actions">
             ${step.custom ? `<button id="custom" class="secondary-button ${state.onboarding[step.id] === CUSTOM_VALUE ? "is-selected" : ""}" type="button">Свой вариант</button>` : ""}
-            <button id="next" class="primary-button" type="button" ${canContinue(step) ? "" : "disabled"}>${escapeHtml(step.button)}</button>
+            <button id="next" class="primary-button ${nextButtonLoadingClass(step)}" type="button" ${canContinue(step) && !isStepBusy(step) ? "" : "disabled"}>${nextButtonContent(step, step.button)}</button>
         </footer>
     `;
 }
@@ -87,7 +87,7 @@ function chooseGoalStep(step) {
                     aria-pressed="${selected === goalValue(goal, index) ? "true" : "false"}"></button>
             `).join("")}
         </section>
-        <button id="next" class="choose-goal-next-hit-area" type="button" ${canContinue(step) ? "" : "disabled"}>${escapeHtml(step.button)}</button>
+        <button id="next" class="choose-goal-next-hit-area ${nextButtonLoadingClass(step)}" type="button" ${canContinue(step) && !isStepBusy(step) ? "" : "disabled"}>${nextButtonContent(step, step.button)}</button>
     `;
 }
 
@@ -110,7 +110,7 @@ function yourPlanStep(step) {
         </div>
         <button id="back" class="your-plan-back-hit-area" type="button" aria-label="Назад"></button>
         <button id="change-plan" class="your-plan-change-hit-area" type="button">Скорректировать план</button>
-        <button id="next" class="your-plan-next-hit-area" type="button">${escapeHtml(step.button)}</button>
+        <button id="next" class="your-plan-next-hit-area ${nextButtonLoadingClass(step)}" type="button" ${isStepBusy(step) ? "disabled" : ""}>${nextButtonContent(step, step.button)}</button>
     `;
 }
 
@@ -147,7 +147,7 @@ function goalStep(step) {
             <span id="counter" class="goal-counter">${value.length} / ${step.limit}</span>
         </label>
         ${textSuggestions("goal", goalTextHints(value), "goal-input")}
-        <button id="next" class="goal-next-button" type="button" ${canContinue(step) ? "" : "disabled"}>${escapeHtml(step.button)}</button>
+        <button id="next" class="goal-next-button ${nextButtonLoadingClass(step)}" type="button" ${canContinue(step) && !isStepBusy(step) ? "" : "disabled"}>${nextButtonContent(step, step.button)}</button>
     `;
 }
 
@@ -234,9 +234,24 @@ function nativeChoiceStep(step) {
                     <span class="native-custom-divider"></span>
                 </button>
             ` : ""}
-            <button id="next" class="native-next-button" type="button" ${!loading && canContinue(step) ? "" : "disabled"}>${escapeHtml(step.button)}</button>
+            <button id="next" class="native-next-button ${nextButtonLoadingClass(step)}" type="button" ${!loading && canContinue(step) && !isStepBusy(step) ? "" : "disabled"}>${nextButtonContent(step, step.button)}</button>
         </footer>
     `;
+}
+
+function isStepBusy(step) {
+    return Boolean(step && state.savingStepId === step.id);
+}
+
+function nextButtonLoadingClass(step) {
+    return isStepBusy(step) ? "is-loading" : "";
+}
+
+function nextButtonContent(step, label) {
+    if (!isStepBusy(step)) {
+        return escapeHtml(label);
+    }
+    return `<span class="button-loading-spinner" aria-label="Загрузка"></span>`;
 }
 
 function choiceStepLoading(step) {

@@ -31,6 +31,7 @@ export async function loadCurrentUser() {
 export async function loadOnboardingSuggestions() {
     return api("/api/onboarding/suggestions", {
         method: "POST",
+        timeoutMs: 15000,
         body: {
             ...state.onboarding,
             // В UI значения хранятся как "Название-0", а модели нужен чистый человеческий текст.
@@ -49,17 +50,30 @@ function readableChoiceValue(value) {
 
 export async function api(path, options = {}) {
     const headers = options.headers ? {...options.headers} : {};
+    const timeoutMs = Number(options.timeoutMs || 0);
+    const controller = timeoutMs > 0 ? new AbortController() : null;
+    const timeout = controller
+        ? window.setTimeout(() => controller.abort(new Error("Request timeout")), timeoutMs)
+        : null;
     if (options.auth !== false && state.token) {
         headers.Authorization = `Bearer ${state.token}`;
     }
     if (options.body !== undefined) {
         headers["Content-Type"] = "application/json";
     }
-    const response = await fetch(path, {
-        method: options.method || "GET",
-        headers,
-        body: options.body === undefined ? undefined : JSON.stringify(options.body)
-    });
+    let response;
+    try {
+        response = await fetch(path, {
+            method: options.method || "GET",
+            headers,
+            body: options.body === undefined ? undefined : JSON.stringify(options.body),
+            signal: controller ? controller.signal : undefined
+        });
+    } finally {
+        if (timeout) {
+            window.clearTimeout(timeout);
+        }
+    }
     if (!response.ok) {
         throw new ApiError(response.status, await response.text());
     }

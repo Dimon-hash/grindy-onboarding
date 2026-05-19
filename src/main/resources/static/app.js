@@ -531,57 +531,61 @@ async function nextStep() {
         return;
     }
     state.isAdvancing = true;
+    state.savingStepId = step.id;
     blurActiveControl();
-    if (shouldDeepenChoice(step)) {
-        await deepenChoiceStep(step);
-        state.isAdvancing = false;
-        return;
-    }
-    if (["experience", "conditions"].includes(step.id)) {
-        finalizeChoiceStep(step);
-    }
-    if (["goal", "experience", "conditions"].includes(step.id)) {
-        queueImmediateSuggestionsRefresh();
-    }
-    if (step.id === "selectedGoal") {
-        await refreshSuggestions({renderAfter: false});
-    }
-    const showSaving = step.id === "experience" && state.customDrawerStepId !== step.id;
-    if (showSaving) {
-        state.savingStepId = step.id;
-        render();
-        await wait(120);
-    } else {
-        const next = document.getElementById("next");
-        if (next) {
-            next.disabled = true;
-        }
-        await wait(80);
-    }
+    render();
+    await wait(80);
+    let renderedFatal = false;
     try {
-        await saveOnboardingWithTimeout();
-    } catch (error) {
-        handleBackgroundSaveError(error);
-        if (error instanceof ApiError && error.status === 401) {
-            nodes.onboardingWizard.innerHTML = `<section class="fatal">${userFacingBootError(error)}</section>`;
+        if (shouldDeepenChoice(step)) {
+            await deepenChoiceStep(step);
             return;
+        }
+        if (["experience", "conditions"].includes(step.id)) {
+            finalizeChoiceStep(step);
+        }
+        if (shouldPrepareSuggestionsBeforeTransition(step)) {
+            await refreshSuggestions({renderAfter: false, force: true});
+        }
+        try {
+            await saveOnboardingWithTimeout();
+        } catch (error) {
+            handleBackgroundSaveError(error);
+            if (error instanceof ApiError && error.status === 401) {
+                renderedFatal = true;
+                nodes.onboardingWizard.innerHTML = `<section class="fatal">${userFacingBootError(error)}</section>`;
+                return;
+            }
+        }
+        if (state.onboardingStep !== currentStepIndex) {
+            return;
+        }
+        if (currentStepIndex < steps.length - 1) {
+            goTo(currentStepIndex + 1);
+            return;
+        }
+        localStorage.setItem("grindy.onboardingComplete", "true");
+        if (telegram) {
+            telegram.sendData(JSON.stringify(state.onboarding));
+            telegram.close();
         }
     } finally {
         state.savingStepId = "";
         state.isAdvancing = false;
+        if (!renderedFatal) {
+            render();
+        }
     }
-    if (state.onboardingStep !== currentStepIndex) {
-        return;
+}
+
+function shouldPrepareSuggestionsBeforeTransition(step) {
+    if (!step) {
+        return false;
     }
-    if (currentStepIndex < steps.length - 1) {
-        goTo(currentStepIndex + 1);
-        return;
+    if (["goal", "experience", "conditions", "selectedGoal"].includes(step.id)) {
+        return (state.onboarding.goal || "").trim().length >= 24;
     }
-    localStorage.setItem("grindy.onboardingComplete", "true");
-    if (telegram) {
-        telegram.sendData(JSON.stringify(state.onboarding));
-        telegram.close();
-    }
+    return false;
 }
 
 function previousStep() {
@@ -651,7 +655,6 @@ async function deepenChoiceStep(step) {
     } catch (error) {
         handleBackgroundSaveError(error);
     }
-    state.savingStepId = "";
     await refreshSuggestions({renderAfter: true, force: true});
 }
 
