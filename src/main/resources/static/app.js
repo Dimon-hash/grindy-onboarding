@@ -523,6 +523,9 @@ async function nextStep() {
     if (["goal", "experience", "conditions"].includes(step.id)) {
         queueImmediateSuggestionsRefresh();
     }
+    if (step.id === "selectedGoal") {
+        await refreshSuggestions({renderAfter: false});
+    }
     const showSaving = step.id === "experience" && state.customDrawerStepId !== step.id;
     if (showSaving) {
         state.savingStepId = step.id;
@@ -724,7 +727,9 @@ function suggestionsKey() {
     return [
         state.onboarding.goal || "",
         state.onboarding.experience || "",
-        state.onboarding.conditions || ""
+        state.onboarding.conditions || "",
+        state.onboarding.selectedGoal || "",
+        state.onboarding.selectedPlan || ""
     ].map((value) => value.trim()).join("|");
 }
 

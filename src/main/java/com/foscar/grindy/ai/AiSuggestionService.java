@@ -28,7 +28,7 @@ import java.util.Map;
 public final class AiSuggestionService {
     private static final String DEFAULT_BASE_URL = "https://api.aitunnel.ru/v1";
     private static final String DEFAULT_MODEL = "gpt-4o-mini";
-    private static final String PROMPT_VERSION = "20260517-plan-fit-choices";
+    private static final String PROMPT_VERSION = "20260519-ai-goal-architect-v1";
 
     private final Json json;
     private final UserStore userStore;
@@ -75,7 +75,7 @@ public final class AiSuggestionService {
     private SuggestionsResponse callModel(UserContext user, OnboardingData onboarding) throws IOException, InterruptedException {
         Map<String, Object> requestBody = Map.of(
                 "model", model,
-                "temperature", 0.86,
+                "temperature", 0.58,
                 "response_format", Map.of("type", "json_object"),
                 "messages", List.of(
                         Map.of("role", "system", "content", systemPrompt()),
@@ -101,10 +101,12 @@ public final class AiSuggestionService {
 
     private String systemPrompt() {
         return """
-                Ты продуктовый AI-коуч для приложения Grindy. Нужно создавать короткие, конкретные варианты ответов и план достижения цели.
+                Ты не просто чат-бот, а AI-архитектор цели внутри приложения Grindy.
+                Твоя задача: превратить сырой запрос пользователя в ясную цель, собрать недостающий контекст и построить персональный путь.
                 Пиши по-русски, дружелюбно, без медицинских обещаний и без опасных советов.
                 Варианты должны быть готовыми к выбору: пользователь нажимает и почти не редактирует.
                 Каждый вариант обязан собирать полезный сигнал для будущего плана: стартовый уровень, прошлые попытки, время, ограничения, поддержку или желаемый темп.
+                Не пиши общие советы. Любой текст должен отвечать на вопрос: "как это поможет построить точный план именно этому человеку?"
                 Верни только JSON без markdown. Схема:
                 {
                   "experience":[{"title":"...","description":"..."} x4],
@@ -114,6 +116,7 @@ public final class AiSuggestionService {
                   "source":"ai"
                 }
                 Все варианты должны быть персональными под цель пользователя и отличаться между собой по смыслу, а не только словами.
+                План обязан использовать выбранные experience, conditions и selectedGoal. Если данных мало, делай разумные предположения и явно закладывай проверку в первой неделе.
                 """;
     }
 
@@ -123,6 +126,8 @@ public final class AiSuggestionService {
                 Цель пользователя: %s
                 Опыт: %s
                 Условия: %s
+                Выбранная цель-карточка: %s
+                Запрос на изменение плана: %s
 
                 Сгенерируй варианты так, чтобы они выглядели как реальные ответы в онбординге, а не как общая статья.
                 experience: 4 разных варианта про стартовый уровень и прошлые попытки. Не повторяй цель в каждом описании.
@@ -131,12 +136,20 @@ public final class AiSuggestionService {
                 Для goals.title пиши короткую готовую цель до 34 символов, без двоеточий, без пояснений и без "Добавить...".
                 Примеры goals.title: "Набрать 5 кг мышц", "Сбросить 5 кг", "Учить английский 30 минут".
                 Заголовки вариантов до 30 символов. Описания вариантов до 84 символов. Bullet до 34 символов.
-                Для milestones в плане пиши 6-8 прикладных этапов до 150 символов: что именно делать, как часто, с кем/чем сверяться и зачем.
+                Для goals сделай 3 реально разные траектории:
+                1) мягкая и безопасная,
+                2) сбалансированная,
+                3) более интенсивная.
+                Для plan.summary кратко объясни логику пути: цель, темп, главный риск, как будем проверять прогресс.
+                Для milestones пиши 7-8 прикладных этапов до 165 символов: что именно делать, как часто, с кем/чем сверяться и зачем.
+                Обязательные этапы плана: уточнение метрики, первая неделя, регулярное действие, среда/поддержка, проверка прогресса, запасной сценарий, усиление, закрепление.
                 """.formatted(
                 shortHash(user.storageId()),
                 clip(onboarding.goal(), 500),
                 clip(onboarding.experience(), 260),
-                clip(onboarding.conditions(), 260)
+                clip(onboarding.conditions(), 260),
+                clip(onboarding.selectedGoal(), 220),
+                clip(onboarding.selectedPlan(), 320)
         );
     }
 
@@ -160,37 +173,97 @@ public final class AiSuggestionService {
             default -> "устойчивый ритм";
         };
         return new SuggestionsResponse(
-                List.of(
-                        new ChoiceSuggestion("Начинаю с нуля", "Нужен простой старт, базовые шаги и понятная первая неделя."),
-                        new ChoiceSuggestion("Были рывки", "Пробовал начинать, но не хватало стабильности и проверки прогресса."),
-                        new ChoiceSuggestion("Есть рабочий опыт", "Уже знаю, что помогает, нужно собрать это в регулярный план."),
-                        new ChoiceSuggestion("Нужна поддержка", "Лучше двигаюсь, когда есть подсказки, обратная связь и контроль.")
-                ),
-                List.of(
-                        new ChoiceSuggestion("Мало времени", "Нужны шаги по 10-20 минут, которые реально влезут в день."),
-                        new ChoiceSuggestion("Нужна гибкость", "Плану нужен запасной вариант для усталости и срывов графика."),
-                        new ChoiceSuggestion("Есть ограничения", "Важно учесть бюджет, здоровье, окружение или расписание."),
-                        new ChoiceSuggestion("Нужна среда", "Помогут люди, места, напоминания и заранее подготовленные условия.")
-                ),
-                List.of(
-                        new GoalSuggestion("3 месяца", titleFor(goal, "мягко"), "Реалистичный план с акцентом на " + focus + ".", List.of("Без перегруза", "Еженедельная проверка", "Понятные шаги"), "blue"),
-                        new GoalSuggestion("2 месяца", titleFor(goal, "активно"), "Более плотный темп, если готов выделять время регулярно.", List.of("Быстрый старт", "Чёткий график", "Контроль прогресса"), "orange"),
-                        new GoalSuggestion("4 месяца", titleFor(goal, "надолго"), "Спокойная траектория, чтобы результат закрепился.", List.of("Мягкий темп", "Запас на паузы", "Устойчивая привычка"), "green")
-                ),
-                new PlanSuggestion(
-                        "Твой план к цели",
-                        "План собран под цель: " + clip(goal, 80),
-                        List.of(
-                                new MilestoneSuggestion("Вы здесь", "Сегодня фиксируем старт и первый шаг"),
-                                new MilestoneSuggestion("Первая неделя", "Собрать минимальный ритм и выбрать короткие действия на каждый день"),
-                                new MilestoneSuggestion("Неделя 2", "Настроить напоминания, поддержку и запасной вариант для сложных дней"),
-                                new MilestoneSuggestion("Первый месяц", "Убрать главные препятствия и закрепить действия в обычном графике"),
-                                new MilestoneSuggestion("Проверка прогресса", "Раз в неделю сравнивать план и реальность, затем упрощать слабые места"),
-                                new MilestoneSuggestion("Поддержка", "Подключить людей, среду или привычные триггеры, чтобы не держаться только на мотивации"),
-                                new MilestoneSuggestion("Закрепление", "Сохранить работающие действия и подготовить следующий уровень без перегруза")
-                        )
-                ),
+                fallbackExperience(goal),
+                fallbackConditions(goal),
+                fallbackGoals(goal, focus),
+                fallbackPlan(goal, focus),
                 "fallback"
+        );
+    }
+
+    private List<ChoiceSuggestion> fallbackExperience(String goal) {
+        String lower = goal.toLowerCase();
+        if (lower.matches(".*(девуш|подруг|знаком|отношен|свидан).*")) {
+            return List.of(
+                    new ChoiceSuggestion("Мало знакомств", "Редко знакомлюсь сам, нужен понятный старт без давления."),
+                    new ChoiceSuggestion("Есть переписки", "Общение бывает, но не всегда доходит до реальных встреч."),
+                    new ChoiceSuggestion("Стесняюсь начинать", "Нужны простые сценарии первого контакта и уверенный темп."),
+                    new ChoiceSuggestion("Нужна система", "Хочу регулярные действия, а не ждать случайного момента.")
+            );
+        }
+        return List.of(
+                new ChoiceSuggestion("Начинаю с нуля", "Нужен простой старт, базовые шаги и понятная первая неделя."),
+                new ChoiceSuggestion("Были рывки", "Пробовал начинать, но не хватало стабильности и проверки прогресса."),
+                new ChoiceSuggestion("Есть рабочий опыт", "Уже знаю, что помогает, нужно собрать это в регулярный план."),
+                new ChoiceSuggestion("Нужна поддержка", "Лучше двигаюсь, когда есть подсказки, обратная связь и контроль.")
+        );
+    }
+
+    private List<ChoiceSuggestion> fallbackConditions(String goal) {
+        String lower = goal.toLowerCase();
+        if (lower.matches(".*(девуш|подруг|знаком|отношен|свидан).*")) {
+            return List.of(
+                    new ChoiceSuggestion("Мало времени", "Нужны 2-3 коротких окна в неделю для общения и встреч."),
+                    new ChoiceSuggestion("Нужны места", "Важно заранее выбрать, где знакомиться и куда приглашать."),
+                    new ChoiceSuggestion("Нужна уверенность", "План должен снижать страх отказа и давать простые шаги."),
+                    new ChoiceSuggestion("Без давления", "Хочу двигаться спокойно, без навязчивости и выгорания.")
+            );
+        }
+        return List.of(
+                new ChoiceSuggestion("Мало времени", "Нужны шаги по 10-20 минут, которые реально влезут в день."),
+                new ChoiceSuggestion("Нужна гибкость", "Плану нужен запасной вариант для усталости и срывов графика."),
+                new ChoiceSuggestion("Есть ограничения", "Важно учесть бюджет, здоровье, окружение или расписание."),
+                new ChoiceSuggestion("Нужна среда", "Помогут люди, места, напоминания и заранее подготовленные условия.")
+        );
+    }
+
+    private List<GoalSuggestion> fallbackGoals(String goal, String focus) {
+        String lower = goal.toLowerCase();
+        if (lower.matches(".*(девуш|подруг|знаком|отношен|свидан).*")) {
+            return List.of(
+                    new GoalSuggestion("1 месяц", "3 новых знакомства в неделю", "Мягкий старт, чтобы набрать практику общения.", List.of("Без давления", "2-3 окна в неделю", "Фиксировать выводы"), "blue"),
+                    new GoalSuggestion("2 месяца", "Найти девушку для встреч", "Сбалансированный путь от общения к реальным встречам.", List.of("Профиль и места", "Регулярные контакты", "1 встреча в неделю"), "orange"),
+                    new GoalSuggestion("3 месяца", "Уверенно строить общение", "Спокойно прокачать навык знакомств и поддержания контакта.", List.of("Практика диалогов", "Обратная связь", "Свой стиль общения"), "green")
+            );
+        }
+        return List.of(
+                new GoalSuggestion("3 месяца", titleFor(goal, "мягко"), "Реалистичный план с акцентом на " + focus + ".", List.of("Без перегруза", "Еженедельная проверка", "Понятные шаги"), "blue"),
+                new GoalSuggestion("2 месяца", titleFor(goal, "активно"), "Более плотный темп, если готов выделять время регулярно.", List.of("Быстрый старт", "Чёткий график", "Контроль прогресса"), "orange"),
+                new GoalSuggestion("4 месяца", titleFor(goal, "надолго"), "Спокойная траектория, чтобы результат закрепился.", List.of("Мягкий темп", "Запас на паузы", "Устойчивая привычка"), "green")
+        );
+    }
+
+    private PlanSuggestion fallbackPlan(String goal, String focus) {
+        String lower = goal.toLowerCase();
+        if (lower.matches(".*(девуш|подруг|знаком|отношен|свидан).*")) {
+            return new PlanSuggestion(
+                    "Твой план к цели",
+                    "Путь строится через регулярную практику общения, выбор подходящих мест и еженедельную проверку того, что реально работает.",
+                    List.of(
+                            new MilestoneSuggestion("Уточнить цель", "Определи формат: серьезные отношения, встречи или просто больше знакомств, чтобы не распыляться."),
+                            new MilestoneSuggestion("Подготовить базу", "Обнови фото, короткое описание и список 5 мест или приложений, где комфортно знакомиться."),
+                            new MilestoneSuggestion("Первая неделя", "Сделай 5 легких контактов без цели сразу понравиться: задача — снять напряжение и собрать опыт."),
+                            new MilestoneSuggestion("Ритм общения", "Выдели 2-3 окна в неделю по 30-40 минут на переписки, прогулки или новые знакомства."),
+                            new MilestoneSuggestion("Сценарии", "Заранее подготовь 3 первых сообщения и 2 идеи простой встречи, чтобы не зависать в моменте."),
+                            new MilestoneSuggestion("Проверка", "Раз в неделю отмечай: сколько контактов, сколько ответов, что было легко и где возник ступор."),
+                            new MilestoneSuggestion("Усиление", "Оставь каналы, где есть ответы, и добавь один новый способ знакомства только после стабильной недели."),
+                            new MilestoneSuggestion("Закрепление", "Сформируй свой спокойный стиль общения и доводи удачные контакты до реальной встречи.")
+                    )
+            );
+        }
+        return new PlanSuggestion(
+                "Твой план к цели",
+                "План собран под цель: " + clip(goal, 80) + ". Темп: " + focus + ", проверка прогресса каждую неделю.",
+                List.of(
+                        new MilestoneSuggestion("Уточнить метрику", "Запиши конкретный результат, срок и показатель, по которому поймешь, что двигаешься верно."),
+                        new MilestoneSuggestion("Первая неделя", "Выбери минимальное действие и сделай его 3 раза, чтобы проверить реальный стартовый уровень."),
+                        new MilestoneSuggestion("Регулярный ритм", "Поставь 3-4 коротких окна в неделю и заранее реши, что делать в загруженный день."),
+                        new MilestoneSuggestion("Среда", "Подготовь место, напоминания, людей или материалы, которые уменьшают трение перед действием."),
+                        new MilestoneSuggestion("Проверка", "Раз в неделю сравни план и реальность: что получилось, где сорвалось и почему."),
+                        new MilestoneSuggestion("Запасной сценарий", "Если день тяжелый, делай уменьшенную версию шага, но сохраняй контакт с целью."),
+                        new MilestoneSuggestion("Усиление", "Когда базовый ритм держится неделю, добавь сложность только в одном параметре."),
+                        new MilestoneSuggestion("Закрепление", "Оставь работающие действия, убери лишнее и определи следующий уровень без перегруза.")
+                )
         );
     }
 
@@ -223,7 +296,7 @@ public final class AiSuggestionService {
     }
 
     private String fingerprint(String userId, OnboardingData onboarding) {
-        return shortHash(PROMPT_VERSION + "|" + userId + "|" + onboarding.goal() + "|" + onboarding.experience() + "|" + onboarding.conditions());
+        return shortHash(PROMPT_VERSION + "|" + userId + "|" + onboarding.goal() + "|" + onboarding.experience() + "|" + onboarding.conditions() + "|" + onboarding.selectedGoal() + "|" + onboarding.selectedPlan());
     }
 
     private String shortHash(String value) {

@@ -6,12 +6,12 @@ import {escapeAttr, escapeHtml} from "./utils.js";
 export function renderStep(step) {
     if (step.type === "loader") {
         return `
-            <img class="loader-art" src="/loader.svg?v=20260517-stable-choice-plan" alt="GRINDY">
+            <img class="loader-art" src="/loader.svg?v=20260519-ai-logic-v1" alt="GRINDY">
         `;
     }
     if (step.type === "welcome") {
         return `
-            <img class="screen-art" src="/welcome-screen.svg?v=20260517-stable-choice-plan" alt="Преврати цель в систему">
+            <img class="screen-art" src="/welcome-screen.svg?v=20260519-ai-logic-v1" alt="Преврати цель в систему">
             <button id="next" class="welcome-hit-area" type="button" aria-label="Начать"></button>
         `;
     }
@@ -99,8 +99,8 @@ function yourPlanStep(step) {
     }
     const hasEditedPlan = state.planChanged || (state.onboarding.selectedPlan && state.onboarding.selectedPlan !== "default-plan");
     const art = hasEditedPlan
-        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260517-stable-choice-plan"
-        : "/Your%20Plan.svg?v=20260517-stable-choice-plan";
+        ? "/Your%20Plan,%20Plan%20Changed.svg?v=20260519-ai-logic-v1"
+        : "/Your%20Plan.svg?v=20260519-ai-logic-v1";
     return `
         <div class="your-plan-scroll">
             <img class="your-plan-art" src="${art}" alt="${escapeAttr(step.title)}">
@@ -118,7 +118,7 @@ function planCorrectionStep(step) {
     const filled = Boolean(draft.trim());
     return `
         <div class="your-plan-scroll is-dimmed">
-            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260517-stable-choice-plan" alt="${escapeAttr(step.title)}">
+            <img class="your-plan-art" src="/Your%20Plan.svg?v=20260519-ai-logic-v1" alt="${escapeAttr(step.title)}">
             ${planOverlay(planForDisplay())}
             <span class="your-plan-scroll-spacer" aria-hidden="true"></span>
         </div>
@@ -139,7 +139,7 @@ function planCorrectionStep(step) {
 function goalStep(step) {
     const value = state.onboarding.goal || "";
     return `
-        <img class="screen-art" src="/goal.svg?v=20260517-stable-choice-plan" alt="Что будем достигать?">
+        <img class="screen-art" src="/goal.svg?v=20260519-ai-logic-v1" alt="Что будем достигать?">
         <button id="back" class="goal-back-hit-area" type="button" aria-label="Назад"></button>
         <label class="goal-input-layer ${value.trim() ? "has-value" : ""}">
             <textarea id="goal-input" maxlength="${step.limit}" enterkeyhint="done" placeholder="${escapeAttr(step.placeholder)}">${escapeHtml(value)}</textarea>
@@ -275,10 +275,10 @@ function customChoiceDescription(value) {
 
 function chooseGoalArt(index) {
     return [
-        "/Choose%20the%20Goal.svg?v=20260517-stable-choice-plan",
-        "/Choose%20the%20Goal-2.svg?v=20260517-stable-choice-plan",
-        "/Choose%20the%20Goal-3.svg?v=20260517-stable-choice-plan"
-    ][index] || "/Choose%20the%20Goal.svg?v=20260517-stable-choice-plan";
+        "/Choose%20the%20Goal.svg?v=20260519-ai-logic-v1",
+        "/Choose%20the%20Goal-2.svg?v=20260519-ai-logic-v1",
+        "/Choose%20the%20Goal-3.svg?v=20260519-ai-logic-v1"
+    ][index] || "/Choose%20the%20Goal.svg?v=20260519-ai-logic-v1";
 }
 
 function goalOptions(step) {
